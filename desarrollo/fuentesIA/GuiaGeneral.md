@@ -17,6 +17,7 @@ En el desarrollo de la base de datos vamos a enfrentarnos a la organización de 
 - Interfaz de cliente: Documento LibreOffice Base conectado a la base de datos externa. Contiene los formularios y macros. Las macros son importadas de solo lectura desde un almacén en el servidor central. Eventualmente podría tener consultas creadas por el propio usuario pero alojadas en el propio documento, no en el servidor.
 - Estructura de ficheros: cada usuario tiene una unidad W que apunta a un directorio del servidor. Se garantiza lectura y escritura completa a cada usuario. La unidad se monta automáticamente.
 - Desarrollo: se estructura la base de datos , se programan las macros y diseñan los formularios en el directorio /desarrollo y luego para poner en producción hay que dar una serie de pasos que tenemos que definir más adelante.
+- Para recibir soporte por parte de la IA para desarrollar la base de datos y su infraestructura, hay que proporcionarle una conjunto de ficheros a la misma. Se ubicarán en desarrollo/fuentesIA.
 
 ### Estructura de ficheros
 
@@ -74,6 +75,22 @@ W:\BDDATLIBRE
 | macros | macros BASIC de LibreOffice para importar en solo lectura por los interfaces de los usuarios. |
 | plantillas | documentos .ott en producción. |
 | utilidades | fichero bat para iniciar el servidor. |
+
+### Documentos a proporcionar a la IA
+
+A la IA le debemos proporcionar los siguientes documentos para que nos proporcione soporte y constituya una fuente de conocimiento. Los documentos los generamos en desarrollo/documentos y con la utilidad de conversión de .odt a .md los convertimos en el formato MarkDown entendible por la IA.
+
+Los documentos, su tipo y su ubicación se listan a continuación:
+
+|  |  |  |  |
+|----|----|----|----|
+| NOMBRE | TIPO | PROCEDENCIA | UTILIDAD |
+| bdat.script | SQL | Directorio desarrollo/bdat | Conocer estructura base datos |
+| content.xml | XML | desarrollo/interfaz/\*.odb/ | Conocer estructura \*.odb |
+| content.xml | XML | desarrollo/interfaz/\*.odb/forms/Obj\*\*/ | Conocer formularios del odb |
+| script-lc.xml | XML | desarrollo/interfaz/\*.odb/Basic/ | Conocer las librerías del odb |
+| manifiest.xml | XML | desarrollo/interfaz/\*.odb/META-INF/ | Proporciona listado de todos los xml en el odb |
+|  |  |  |  |
 
 ## Lógica de la tramitación de expedientes
 
