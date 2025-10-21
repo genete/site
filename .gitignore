@@ -1,3 +1,5 @@
 *.odt
 .~lock.*
 *.jar
+*.ps1
+Thumbs.db
