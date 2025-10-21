@@ -4,14 +4,21 @@
 
 El propósito de este proyecto es desarrollar una base de datos y un interfaz para gestionar tramitaciones de expedientes de solicitudes de instalaciones de alta tensión.
 
-## Claves
+El proyecto tiene dos retos principales. Uno el desarrollo técnico de la base de datos y el interfaz y dos la definición de la lógica de negocio de la tramitación de expedientes.
+
+## Desarrollo de la base de datos
+
+En el desarrollo de la base de datos vamos a enfrentarnos a la organización de la información, así como la necesidad de concurrencia de los usuarios. Para la organización de la información se ha estudiado la lógica del proceso de tramitación de expedientes, y la relación entre la información que se maneja. De esta forma, la estructura de la base de datos está relacionada con la forma de tramitación de los expedientes. Primero analizaremos las claves desde el punto de vista técnico, de implementación, conociendo las necesidades del entorno en el que vamos a desarrollar.
+
+### Claves técnicas
 
 - Entorno: usuarios con Windows 11(máximo 15) en red, con servidor de archivos mantenido por el entorno empresarial.
 - Base de datos: HSLQDB en servidor. EL servidor se ejecuta inicialmente en el PC de un usuario en red y los clientes son otros usuarios en red. La base de datos y otros archivos se alojan en el servidor de red. Se pretende que en el futuro el servidor de bases de datos se ejecute en el servidor central. Contiene las tablas y consultas necesarias.
 - Interfaz de cliente: Documento LibreOffice Base conectado a la base de datos externa. Contiene los formularios y macros. Las macros son importadas de solo lectura desde un almacén en el servidor central. Eventualmente podría tener consultas creadas por el propio usuario pero alojadas en el propio documento, no en el servidor.
 - Estructura de ficheros: cada usuario tiene una unidad W que apunta a un directorio del servidor. Se garantiza lectura y escritura completa a cada usuario. La unidad se monta automáticamente.
+- Desarrollo: se estructura la base de datos , se programan las macros y diseñan los formularios en el directorio /desarrollo y luego para poner en producción hay que dar una serie de pasos que tenemos que definir más adelante.
 
-## Estructura de ficheros
+### Estructura de ficheros
 
 La estructura de ficheros parte de una ruta fija y tiene estos directorios:
 
@@ -67,3 +74,18 @@ W:\BDDATLIBRE
 | macros | macros BASIC de LibreOffice para importar en solo lectura por los interfaces de los usuarios. |
 | plantillas | documentos .ott en producción. |
 | utilidades | fichero bat para iniciar el servidor. |
+
+## Lógica de la tramitación de expedientes
+
+Los expedientes de solicitudes de instalaciones de alta tensión se tramitan conforme a una normativa específica y mediante las reglas establecidas en las leyes sectoriales y la ley de procedimiento administrativo. Tras analizar los distintos tipos de procedimientos se concluye que la tramitación tiene correlación con una serie de conceptos: expediente, solicitud, proyecto, fase, trámite y tarea.
+
+### Relación expediente, solicitud, proyecto, fase, trámite y tarea
+
+Se tramita un solo expediente cada vez, que dispone de un número único (por mantener el historial el número usado no será el ID del expediente en la base de datos, si no un número paralelo generado desde un valor base tomado de otra base de datos existente). Cada expediente tiene un proyecto asociado. Un proyecto puede tener modificaciones siempre que no desvirtúen su esencia (finalidad). Cada expediente puede tener diferentes solicitudes (autorización administrativa previa, autorización administrativa de construcción, etc.) sobre el mismo proyecto (o el proyecto con uno o más modificados). Cada solicitud pasa por diferentes fases (ANÁLISIS SOLICITUD, INFORMACIÓN PÚBLICA, CONSULTAS, etc.) aunque hay casos en que puede haber más de una fase activa al mismo tiempo. Cada fase puede tener uno o más trámites (por ejemplo la fase de información pública puede tener el trámite de publicación en BOE y el trámite de publicación en BOP) y cada trámite puede tener una o más tareas (redactar anuncio, poner en firma, notificar, esperar plazo, etc.)
+
+### Estructura de negocio de la tramitación
+
+En nuestro caso queremos que la lógica de negocio no sea rígida, restringiendo lo que se puede o no se puede hacer en cada solicitud, fase, trámite, etc. de forma que no exista margen de maniobra para el usuario en tomar decisiones dentro de lo posible. Deseamos que la lógica sea definida de la siguiente forma:
+
+1.  En cualquier estado o situación del expediente, es posible hacer cualquier cosa que no esté expresamente prohibida. En lugar de listar lo únicamente permitido, listar lo expresamente prohibido y permitir que se pueda hacer cualquier operación mientras no esté expresamente prohibida. Por ejemplo, una prohibición genérica sería que no se puede finalizar una fase si quedan trámites sin finalizar. Otra prohibición sería que no se puede iniciar la fase resolver si no se ha finalizado la fase análisis solicitud)
+2.  Las prohibiciones que definen la lógica de la tramitación ha de obtenerse de valores definidos en tablas, no internamente escrito en el código. De esta forma la modificación de un precepto legal (y por tanto la lógica del procedimiento) no requiere modificar macros si no que solo requiere modificar los datos de las prohibiciones del procedimiento. Esto hace que el sistema se adapte rápidamente a los cambios.
