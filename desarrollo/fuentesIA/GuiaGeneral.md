@@ -92,9 +92,21 @@ Los documentos, su tipo y su ubicación se listan a continuación:
 | content.xml | XML | desarrollo/interfaz/\*.odb/forms/Obj\*\*/ | Conocer formularios del odb |
 | script-lc.xml | XML | desarrollo/interfaz/\*.odb/Basic/ | Conocer las librerías del odb |
 | manifiest.xml | XML | desarrollo/interfaz/\*.odb/META-INF/ | Proporciona listado de todos los xml en el odb |
-|  |  |  |  |
+| Documentos.md | .md | desarrollo/fuentesIA/\*.md | Documentos de resumen de las directrices de desarrollo del proyecto así como explicaciones de la estructura de las bases de datos, la lógica de los procedimientos, etc. |
 
-Los archivos se los proporcionamos en formato directo al subirlo a la IA. Debemos cambiar el nombre para que lo pueda interpretar en el caso de que mantenga el mismo, por ejemplo para el caso de content.xml. En este caso antepondremos el nombre del Objnn. Por ejemplo Obj11content.xml, corresponde con el content.xml del formulario Obj11 en el fichero odb.
+Los archivos se los proporcionamos en formato directo al subirlo a la IA. Debemos cambiar el nombre para que lo pueda interpretar en el caso de que mantenga el mismo, por ejemplo para el caso de content.xml. En este caso antepondremos el nombre del Objnn. Por ejemplo Obj11content.xml, corresponde con el content.xml del formulario Obj11 en el fichero odb. En todo caso siempre se le añade la extensión .txt a los archivos que siendo de texto no se soporte directamente el formato.
+
+### Proceso de iteración de desarrollo con la IA
+
+Para la ayuda desde la IA en el proceso de desarrollo del proyecto, debo proporcionarle los archivos anteriores a medida que se van actualizando. El proceso sería:
+
+Detecto necesidad \> Le explico a la IA la necesidad y me ayuda a resolverla según el contexto actual de desarrollo \> Realizo la implementación de la necesidad y la depuro de forma interactiva hasta que quedo satisfecho \> Actualizo los ficheros pertinentes en las fuentes de la IA \> Fin de iteración.
+
+### Proceso de despliegue en producción
+
+Para el despliegue en producción se necesitan dar los siguientes pasos:
+
+- Por definir
 
 ## Lógica de la tramitación de expedientes
 
