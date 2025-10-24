@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE script:module PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "module.dtd">
+<script:module xmlns:script="http://openoffice.org/2000/script" script:name="FormularioExpedientes" script:language="StarBasic" script:moduleType="normal">REM  *****  BASIC  *****
+
+Sub Main
+
+End Sub
+
+Sub NuevoExpedienteIncrementado(oEvent As Object)
+    Dim oForm As Object, oConn As Object, oStatement As Object
+    Dim oResult As Object
+    Dim nMaxNumeroAT As Long, nNuevoNumeroAT As Long
+    Dim oControl_NumeroAT As Object
+    
+    &apos; Obtener formulario (asignado al botón dentro del formulario de Expedientes)
+    oForm = oEvent.Source.Model.Parent
+    &apos; Acceso a la conexión de base de datos del formulario
+    oConn = oForm.ActiveConnection
+    
+    &apos; Crear consulta SQL para obtener el mayor NumeroAT
+    oStatement = oConn.createStatement()
+    oResult = oStatement.executeQuery(&quot;SELECT MAX(NUMERO_AT) FROM TRAMITACION.EXPEDIENTES&quot;)
+    nMaxNumeroAT = 0 
+    If oResult.next() Then
+        nMaxNumeroAT = oResult.getLong(1)
+    End If
+    nNuevoNumeroAT = nMaxNumeroAT + 1
+    
+    &apos; Cerrar statement y result
+    oResult.close()
+    oStatement.close()
+    
+    &apos; Insertar en el recordset del formulario
+    oForm.moveToInsertRow()
+    oForm.updateLong(oForm.findColumn(&quot;NUMERO_AT&quot;), nNuevoNumeroAT)
+    &apos; No hacemos insertRow() aún - dejamos que el usuario complete los otros campos
+    
+    &apos; Enfocar el campo RESPONSABLE_ID para que el usuario lo complete
+    &apos; Dim oControl_Responsable As Object
+    &apos; oControl_Responsable = oForm.getByName(&quot;RESPONSABLE_ID&quot;)
+    &apos; oControl_Responsable.grabFocus()
+    
+End Sub
+
+
+Sub GuardarYCerrarFormulario(oEvent As Object)
+    Dim oFrame As Object
+    Dim dispatcher As Object
+    Dim args() As New com.sun.star.beans.PropertyValue
+    
+    oFrame = ThisComponent.CurrentController.Frame
+    dispatcher = createUnoService(&quot;com.sun.star.frame.DispatchHelper&quot;)
+    
+    &apos; Ejecutar el comando interno para guardar el registro (equivale a pulsar &quot;Guardar registro&quot;)
+    dispatcher.executeDispatch(oFrame, &quot;.uno:RecSave&quot;, &quot;&quot;, 0, args())
+    
+    &apos; Cerrar el formulario
+    oFrame.close(True)
+End Sub
+
+</script:module>
