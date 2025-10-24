@@ -271,11 +271,8 @@ Function DocumentarFormularioMejorado(oFormDoc As Object, sFormName As String) A
                             sListSource = oModel.ListSource
                         End If
                         If sListSource &lt;&gt; &quot;&quot; Then
-                            If Len(sListSource) &gt; 50 Then
-                                sOrigenLista = Left(sListSource, 47) &amp; &quot;...&quot;
-                            Else
-                                sOrigenLista = sListSource
-                            End If
+                            &apos; Mostrar el SQL completo (sin truncar)
+                            sOrigenLista = sListSource                           
                         End If
                         On Error GoTo 0
                     End If
@@ -309,10 +306,19 @@ Function DocumentarFormularioMejorado(oFormDoc As Object, sFormName As String) A
             sResult = sResult &amp; &quot;*El formulario no contiene controles o no se pudo acceder a ellos.*&quot; &amp; Chr(10) &amp; Chr(10)
         End If
         
-        &apos; Cerrar el componente (usar dispose para documentos embebidos)
+        &apos; Cerrar el formulario después de documentarlo
         On Error Resume Next
-        oComponent.dispose()
-        On Error GoTo 0
+        If Not IsNull(oComponent) Then
+            &apos; Cerrar la ventana si está abierta
+            Dim oFrame As Object
+            oFrame = oComponent.getCurrentController().getFrame()
+            If Not IsNull(oFrame) Then
+                oFrame.close(True)
+            End If
+            &apos; Descargar el documento embebido
+            oComponent.dispose()
+        End If
+    On Error GoTo 0
     Else
         sResult = sResult &amp; &quot;*No se pudo abrir el formulario para inspección.*&quot; &amp; Chr(10) &amp; Chr(10)
     End If
