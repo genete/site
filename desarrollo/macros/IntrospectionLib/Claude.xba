@@ -575,9 +575,10 @@ End Function
 Function ObtenerRutaGuardado() As String
     Dim oDoc As Object
     Dim sRutaODB As String
+    Dim iPosicion As Integer
+    Dim i As Integer
     Dim sRutaDirectorio As String
     Dim sNombreODB As String
-    Dim sNombreArchivo As String
     
     On Error Resume Next
     
@@ -585,15 +586,47 @@ Function ObtenerRutaGuardado() As String
     oDoc = ThisDatabaseDocument
     sRutaODB = ConvertFromURL(oDoc.getURL())
     
-    &apos; Extraer directorio y nombre del archivo sin extensión
-    sRutaDirectorio = Left(sRutaODB, InStrRev(sRutaODB, &quot;\&quot;))
-    sNombreODB = Mid(sRutaODB, InStrRev(sRutaODB, &quot;\&quot;) + 1)
-    sNombreODB = Left(sNombreODB, InStrRev(sNombreODB, &quot;.&quot;) - 1)
-    sNombreArchivo = &quot;formularios_&quot; &amp; sNombreODB &amp; &quot;.md&quot;
+    &apos; Verificar que no esté vacía
+    If sRutaODB = &quot;&quot; Then
+        ObtenerRutaGuardado = &quot;&quot;
+        Exit Function
+    End If
+    
+    &apos; Buscar manualmente la última barra invertida
+    iPosicion = 0
+    For i = Len(sRutaODB) To 1 Step -1
+        If Mid(sRutaODB, i, 1) = &quot;\&quot; Then
+            iPosicion = i
+            Exit For
+        End If
+    Next i
+    
+    &apos; Si no encontró \, buscar /
+    If iPosicion = 0 Then
+        For i = Len(sRutaODB) To 1 Step -1
+            If Mid(sRutaODB, i, 1) = &quot;/&quot; Then
+                iPosicion = i
+                Exit For
+            End If
+        Next i
+    End If
+    
+    &apos; Extraer directorio y nombre
+    If iPosicion &gt; 0 Then
+        sRutaDirectorio = Left(sRutaODB, iPosicion)
+        sNombreODB = Mid(sRutaODB, iPosicion + 1)
+        
+        &apos; Quitar extensión .odb
+        If Right(sNombreODB, 4) = &quot;.odb&quot; Then
+            sNombreODB = Left(sNombreODB, Len(sNombreODB) - 4)
+        End If
+        
+        ObtenerRutaGuardado = sRutaDirectorio &amp; &quot;formularios_&quot; &amp; sNombreODB &amp; &quot;.md&quot;
+    Else
+        ObtenerRutaGuardado = &quot;&quot;
+    End If
     
     On Error GoTo 0
-    
-    ObtenerRutaGuardado = sRutaDirectorio &amp; sNombreArchivo
 End Function
 
 Function GetPathSettings() As Object
