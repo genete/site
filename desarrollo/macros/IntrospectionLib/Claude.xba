@@ -573,25 +573,27 @@ Function EscaparMarkdown(sTexto As String) As String
 End Function
 
 Function ObtenerRutaGuardado() As String
-    Dim oFilePicker As Object
-    Dim sRuta As String
+    Dim oDoc As Object
+    Dim sRutaODB As String
+    Dim sRutaDirectorio As String
+    Dim sNombreODB As String
+    Dim sNombreArchivo As String
     
     On Error Resume Next
-    oFilePicker = CreateUnoService(&quot;com.sun.star.ui.dialogs.FilePicker&quot;)
-    oFilePicker.initialize(Array(com.sun.star.ui.dialogs.TemplateDescription.FILESAVE_SIMPLE))
-    oFilePicker.setDisplayDirectory(ConvertToURL(GetPathSettings().Work))
-    oFilePicker.appendFilter(&quot;Archivos Markdown&quot;, &quot;*.md&quot;)
-    oFilePicker.setCurrentFilter(&quot;Archivos Markdown&quot;)
-    oFilePicker.setDefaultName(&quot;documentacion_formularios.md&quot;)
     
-    If oFilePicker.execute() = com.sun.star.ui.dialogs.ExecutableDialogResults.OK Then
-        sRuta = ConvertFromURL(oFilePicker.getFiles()(0))
-    Else
-        sRuta = &quot;&quot;
-    End If
+    &apos; Obtener el documento actual y su ruta
+    oDoc = ThisDatabaseDocument
+    sRutaODB = ConvertFromURL(oDoc.getURL())
+    
+    &apos; Extraer directorio y nombre del archivo sin extensión
+    sRutaDirectorio = Left(sRutaODB, InStrRev(sRutaODB, &quot;\&quot;))
+    sNombreODB = Mid(sRutaODB, InStrRev(sRutaODB, &quot;\&quot;) + 1)
+    sNombreODB = Left(sNombreODB, InStrRev(sNombreODB, &quot;.&quot;) - 1)
+    sNombreArchivo = &quot;formularios_&quot; &amp; sNombreODB &amp; &quot;.md&quot;
+    
     On Error GoTo 0
     
-    ObtenerRutaGuardado = sRuta
+    ObtenerRutaGuardado = sRutaDirectorio &amp; sNombreArchivo
 End Function
 
 Function GetPathSettings() As Object
