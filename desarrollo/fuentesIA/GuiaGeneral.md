@@ -65,7 +65,7 @@ W:\BDDATLIBRE
 | bdat | Aloja los ficheros .script y .properties de la base de datos |
 | desarrollo | Dispone todos los directorios necesarios para desarrollar la base de datos |
 | desarrollo/bdat | Base de datos en desarrollo |
-| desarrollo/documentos | Contiene los documentos para el desarrollador |
+| desarrollo/documentos | Contiene los documentos para el desarrollador y para pasarlos a la IA |
 | desarrollo/fuentesIA | Contiene los documentos necesarios para darle información a la IA, por ejemplo este documento en formato MarkDown. |
 | desarrollo/interfaz | Documentos .odb de desarrollo |
 | desarrollo/macros | Macros de desarrollo para formularios. |
@@ -82,17 +82,16 @@ W:\BDDATLIBRE
 
 A la IA le debemos proporcionar los siguientes documentos para que nos proporcione soporte y constituya una fuente de conocimiento. Los documentos los generamos en desarrollo/documentos y con la utilidad de conversión de .odt a .md los convertimos en el formato MarkDown entendible por la IA.
 
-Los documentos, su tipo y su ubicación se listan a continuación:
+Los documentos, su tipo y su procedencia, coómo se obtiene y utilidad se listan a continuación:
 
-|  |  |  |  |
-|----|----|----|----|
-| NOMBRE | TIPO | PROCEDENCIA | UTILIDAD |
-| bdat.script | SQL | Directorio desarrollo/bdat | Conocer estructura base datos |
-| formularios_completo.json | JSON | desarrollo/fuentesIA/ | Conocer estructura de formularios, controles, eventos y propiedades de los archivos .odb |
-| nombreLibreria.xml.txt | XML | desarrollo/macros/ | Incluir el código fuente de las macros BASIC de LibreOffice en formato XML, legible por la IA |
-| Documentos.md | .md | desarrollo/fuentesIA/*.md | Documentos de resumen de las directrices de desarrollo del proyecto así como explicaciones de la estructura de las bases de datos, la lógica de los procedimientos, etc. |
+| NOMBRE | TIPO | PROCEDENCIA | CÓMO SE OBTIENE | UTILIDAD |
+|----|----|----|----|----|
+| bdat.script.txt | SQL | desarrollo/bdat | Se limpia y coloca en desarrollo/fuentesIA/ con el script *desarrollo/utilidades/limpia_script.py* | Conocer estructura base datos |
+| formularios_completo.json | JSON | desarrollo/fuentesIA/ | Se obtiene con el script *desarrollo/utilidades/extraer_formularios_v5.py* dándole el fichero .odb. Este script además descomprime el fichero .odb y permite el acceso manual a cualquier xml | Conocer estructura de formularios, controles, eventos y propiedades de los archivos .odb |
+| nombreModulo.xml.txt | XML | fichero.odb/Basic/nombreLibreria/ | Se extrae manualmente del directorio descomprimido *fichero.odb/Basic/nombreLibreria/nombreModulo.xml*, se renombra añadiendo extensión .txt y se coloca en desarrollo/fuentesIA/. **Nota**: Considerar unificar todos los módulos en un solo fichero para el futuro cuando haya más módulos | Incluir el código fuente de las macros BASIC de LibreOffice en formato XML, legible por la IA |
+| Documentos.md | .md | desarrollo/documentos/*.odt | Se generan por conversión de .odt a .md con la macro *desarrollo/utilidades/ConvertidorODT-MD.bat* | Documentos de resumen de las directrices de desarrollo del proyecto así como explicaciones de la estructura de las bases de datos, la lógica de los procedimientos, etc. |
 
-Los archivos se los proporcionamos en formato directo al subirlo a la IA. El archivo JSON consolidado (formularios_completo.json) sustituye a los múltiples archivos XML de contenido (content.xml) y manifest.xml, proporcionando toda la información de formularios en un formato más estructurado y manejable.
+El archivo JSON consolidado (formularios_completo.json) sustituye a los múltiples archivos XML de contenido (content.xml) y manifest.xml, proporcionando toda la información de formularios en un formato más estructurado y manejable.
 
 ### Proceso de iteración de desarrollo con la IA
 
