@@ -89,8 +89,8 @@ Los documentos, su tipo y su ubicación se listan a continuación:
 | NOMBRE | TIPO | PROCEDENCIA | UTILIDAD |
 | bdat.script | SQL | Directorio desarrollo/bdat | Conocer estructura base datos |
 | formularios_completo.json | JSON | desarrollo/fuentesIA/ | Conocer estructura de formularios, controles, eventos y propiedades de los archivos .odb |
-| script-lc.xml | XML | desarrollo/interfaz/\*.odb/Basic/ | Conocer las librerías del odb |
-| Documentos.md | .md | desarrollo/fuentesIA/\*.md | Documentos de resumen de las directrices de desarrollo del proyecto así como explicaciones de la estructura de las bases de datos, la lógica de los procedimientos, etc. |
+| nombreLibreria.xml.txt | XML | desarrollo/macros/ | Incluir el código fuente de las macros BASIC de LibreOffice en formato XML, legible por la IA |
+| Documentos.md | .md | desarrollo/fuentesIA/*.md | Documentos de resumen de las directrices de desarrollo del proyecto así como explicaciones de la estructura de las bases de datos, la lógica de los procedimientos, etc. |
 
 Los archivos se los proporcionamos en formato directo al subirlo a la IA. El archivo JSON consolidado (formularios_completo.json) sustituye a los múltiples archivos XML de contenido (content.xml) y manifest.xml, proporcionando toda la información de formularios en un formato más estructurado y manejable.
 
