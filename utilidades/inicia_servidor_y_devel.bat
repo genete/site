@@ -8,6 +8,8 @@ java -cp "%HSQL_PATH%\hsqldb-jdk8.jar" org.hsqldb.server.Server ^
   --dbname.0 bdat ^
   --database.1 file:%DB_DESARROLLO%\bdat ^
   --dbname.1 bdat_desarrollo ^
-  --port 9001
+  --port 9001 ^
+  --silent false ^
+  --trace true
 
 pause
