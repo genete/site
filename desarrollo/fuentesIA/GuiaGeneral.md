@@ -19,45 +19,86 @@ En el desarrollo de la base de datos vamos a enfrentarnos a la organización de 
 - **Desarrollo**: se estructura la base de datos , se programan las macros y diseñan los formularios en el directorio /desarrollo y luego para poner en producción hay que dar una serie de pasos que tenemos que definir más adelante.
 - **Soporte**: Para recibir soporte por parte de la IA para desarrollar la base de datos y su infraestructura, hay que proporcionarle una conjunto de ficheros a la misma. Se ubicarán en desarrollo/fuentesIA.
 
+### Control de versiones 
+
+El proyecto utiliza Git para control de versiones. Se hacen commits de los archivos principales cuando se consolidan cambios importantes. Esto permite:
+
+- Volver a versiones anteriores si algo falla
+- Tener historial de evolución del proyecto
+- Trabajar de forma segura en desarrollo sin miedo a perder trabajo
+
+Los archivos bajo control de versiones incluyen:
+
+- Base de datos de desarrollo (bdat.script, bdat.properties)
+- Interfaces .odb de desarrollo
+- Macros (.xml)
+- Scripts de utilidades (.py, .bat)
+- Documentación (.md, .odt)
+- Archivos fuente IA (JSON, XML, SQL, TXT)
+
 ### Estructura de ficheros
 
 La estructura de ficheros parte de una ruta fija y tiene estos directorios:
 
 W:\BDDATLIBRE
 
-+---bdat
+│
 
-+---desarrollo
+├───bdat
 
-¦ +---bdat
+│
 
-¦ +---documentos
+├───desarrollo
 
-¦ +---fuentesIA
+│ ├───bdat
 
-¦ +---interfaz
+│ ├───documentos
 
-¦ +---macros
+│ ├───fuentesIA
 
-¦ +---plantillas
+│ ├───interfaz
 
-¦ +---utilidades
+│ ├───macros
 
-+---documentos
+│ ├───plantillas
 
-+---hslqdb
+│ └───utilidades
 
-+---interfaz
+│
 
-¦ +---supervisor
+├───preproduccion
 
-¦ +---tramitador
+│ ├───bdat
 
-+---macros
+│ └───utilidades
 
-+---plantillas
+│
 
-+---utilidades
+├───documentos
+
+│
+
+├───hslqdb
+
+│
+
+├───interfaz
+
+│ ├───supervisor
+
+│ └───tramitador
+
+│
+
+├───macros
+
+│
+
+├───plantillas
+
+│
+
+└───utilidades
 
 |  |  |
 |----|----|
@@ -71,6 +112,9 @@ W:\BDDATLIBRE
 | desarrollo/macros | Macros de desarrollo para formularios. |
 | desarrollo/plantillas | Plantillas .ott de desarrollo |
 | desarrollo/utilidades | Scripts utiles (bat, py, etc.). Sirven para ejecutar el servidor de la base de datos en desarrollo y otras utilidades para convertir documentos. |
+| preproduccion | Dispone de los directorios necesarios para hacer las pruebas previas al despliegue en producción |
+| preproduccion/bdat | Base de datos en preproducción |
+| preproduccion/utilidades | Script para ejecutar el servidor de preproduccion |
 | documentos | Documentos y guías para el usuario final |
 | hsqldb | Ficheros Java (.jar) para ejecutar el servidor de bases de datos HSQLDB. |
 | Interfaz | Copias en producción de los interfaces .odb de usuarios para conectarse a la base de datos. Hay dos tipos de usuarios (tramitador y supervisor) con privilegios diferenciados por tablas. |
@@ -84,24 +128,78 @@ A la IA le debemos proporcionar los siguientes documentos para que nos proporcio
 
 Los documentos, su tipo y su procedencia, coómo se obtiene y utilidad se listan a continuación:
 
-| NOMBRE | TIPO | PROCEDENCIA | CÓMO SE OBTIENE | UTILIDAD |
-|----|----|----|----|----|
-| bdat.script.txt | SQL | desarrollo/bdat | Se limpia y coloca en desarrollo/fuentesIA/ con el script *desarrollo/utilidades/limpia_script.py* | Conocer estructura base datos |
-| formularios_completo.json | JSON | desarrollo/fuentesIA/ | Se obtiene con el script *desarrollo/utilidades/extraer_formularios_v5.py* dándole el fichero .odb. Este script además descomprime el fichero .odb y permite el acceso manual a cualquier xml | Conocer estructura de formularios, controles, eventos y propiedades de los archivos .odb |
-| nombreModulo.xml.txt | XML | fichero.odb/Basic/nombreLibreria/ | Se extrae manualmente del directorio descomprimido *fichero.odb/Basic/nombreLibreria/nombreModulo.xml*, se renombra añadiendo extensión .txt y se coloca en desarrollo/fuentesIA/. **Nota**: Considerar unificar todos los módulos en un solo fichero para el futuro cuando haya más módulos | Incluir el código fuente de las macros BASIC de LibreOffice en formato XML, legible por la IA |
-| Documentos.md | .md | desarrollo/documentos/*.odt | Se generan por conversión de .odt a .md con la macro *desarrollo/utilidades/ConvertidorODT-MD.bat* | Documentos de resumen de las directrices de desarrollo del proyecto así como explicaciones de la estructura de las bases de datos, la lógica de los procedimientos, etc. |
+| NOMBRE | TIPO | PROCEDENCIA | SCRIPT | QUÉ HACE | UTILIDAD |
+|----|----|----|----|----|----|
+| bdat.script.txt | SQL | bdat.script | *desarrollo/utilidades/limpia_script.py* | Se quitan las ordenes SQL tipo INSERT. Solicita con diálogo el .script a procesar y coloca el resultado donde elija el usuario*.* | Conocer estructura base datos |
+| formularios_completo.json | JSON | \*.odb | *desarrollo/utilidades/extraer_formularios_v5.py* | Crea un json con los principales datos de formularios y controles. Solicita el fichero .odb y crea la salida en la misma ruta que el fichero odb. Este script además descomprime el fichero .odb en \_extract\_\*.odb en la misma ruta que el odb | Conocer estructura de formularios, controles, eventos y propiedades de los archivos .odb |
+| NombreODB_modulos_consolidados.xml.txt | XML | desarrollo/interfaz/.odb | *desarrollo/utilidades/consolidar_modulos_basic.py* | Se obtiene con el script dándole el fichero .odb y la ruta de salida en la linea de comando. El prefijo varía según el ODB proporcionado. | Incluir el código fuente de las macros BASIC de LibreOffice en formato XML, legible por la IA |
+| Documentos.md | MD | desarrollo/documentos/\*.odt | *desarrollo/utilidades/ConvertidorODT-MD.bat* | Conversión de .odt a .md con la macro. Pide la ruta al odb y lo coloca directamente en desarrollo/documentos. Usa pandoc internamente | Documentos de resumen de las directrices de desarrollo del proyecto así como explicaciones de la estructura de las bases de datos, la lógica de los procedimientos, etc. |
+| datos_maestros.sql.txt | SQL | desarrolo/bdat/bdat.script | *desarrollo/utilidades/extraer_datos_maestros.py* | Extrae los datos INSERT de bdat.script de las tablas indicadas en fuentesIA/tablas_maestras.txt y lo coloca en fuentesIA/datos_maestros.sql.txt | Conocer los datos que definen la lógica de negocio: TIPOS_EXPEDIENTES, TIPOS_SOLICITUDES, etc |
+| tablas_maestras.txt | TXT | Creada por el desarrollador | manual | Configuración del script extraer_datos_maestros.py | Contiene las tablas de datos maestros, que definen el negocio de la base de datos. |
 
 El archivo JSON consolidado (formularios_completo.json) sustituye a los múltiples archivos XML de contenido (content.xml) y manifest.xml, proporcionando toda la información de formularios en un formato más estructurado y manejable.
 
+Para mayor facilidad de uso se ha creado un script bat donde mediante menú se puede ejecutar cualquiera de los scripts anteriores: menu_utilidades_desarrollo.bat
+
 ### Proceso de iteración de desarrollo con la IA
 
-Para la ayuda desde la IA en el proceso de desarrollo del proyecto, debo proporcionarle los archivos anteriores a medida que se van actualizando. El proceso sería:
+Para la ayuda desde la IA en el proceso de desarrollo del proyecto, debo proporcionarle los archivos actualizados a medida que avanzo. El proceso sigue este flujo:
 
-Detecto necesidad > Le explico a la IA la necesidad y me ayuda a resolverla según el contexto actual de desarrollo > Realizo la implementación de la necesidad y la depuro de forma interactiva hasta que quedo satisfecho > Actualizo los ficheros pertinentes en las fuentes de la IA > Fin de iteración.
+Ciclo de iteración:
+
+Detecto necesidad → Le explico a la IA la necesidad y me ayuda a resolverla según el contexto actual de desarrollo → Realizo la implementación de la necesidad y la depuro de forma interactiva hasta que quedo satisfecho → Actualizo los ficheros pertinentes en las fuentes de la IA → Fin de iteración.
+
+Control de versiones:
+
+El proyecto está bajo control de versiones Git. Hago *commits* cuando hay cambios importantes consolidados. Esto garantiza que puedo volver atrás si algo no funciona.
+
+Fases de desarrollo:
+
+Esta forma de iterar con la IA para ir desarrollando todo el sistema tiene cuatro fases:
+
+1.  Fase 1 – Estructura de datos
+
+- - Definición de tablas maestras (tipos de datos estructurales)
+  - Tablas de datos operacionales de expedientes
+  - Sin lógica de negocio implementada (todo está permitido)
+  - Enfoque: consolidar estructura de BD paso a paso
+
+1.  Fase 2 – Interfaz de usuario
+
+- - Formularios de introducción de datos
+  - Macros de ayuda (navegación, filtrado, plantillas, apertura documentos)
+  - Sin restricciones de lógica de negocio (el usuario controla qué hacer)
+  - Enfoque: consolidar interfaz funcional paso a paso
+  - Podría ponerse en producción al finalizar esta fase
+
+1.  Fase 3 - Lógica de Negocio
+
+- - Definición de tablas que configuran la lógica de negocio
+  - Interfaz SUPERVISOR para gestionar esas tablas
+  - Macros de validación basadas en consultas (no hardcoded)
+  - *Despliegue progresivo* en producción de nuevas funcionalidades
+  - *IMPORTANTE*: Aquí sí requiere mayor control porque ya hay usuarios y datos reales
+
+1.  Fase 4 - Desarrollo continuo
+
+- - Mejoras y nuevas funcionalidades
+  - Base de datos en producción con usuarios activos
+  - Proceso de actualización y despliegue definido
+
+Dependencias entre archivos fuente IA:
+
+Cuando modifico algo, debo actualizar los archivos correspondientes:
+
+- Cambio en estructura BD → Regenerar: \`bdat.script.txt\`, \`formularios_completo.json\`
+- Cambio en macros → Regenerar: \`NombreODB_modulos_consolidados.xml.txt\`
+- Cambio en datos maestros → Actualizar (si procede) \`tablas_maestras.txt\`→ Regenerar: \`datos_maestros.sql.txt\`
+- Cambio en formularios → Regenerar: \`formularios_completo.json\`
 
 ### Proceso de despliegue en producción
 
-Para el despliegue en producción se necesitan dar los siguientes pasos:
+Para el despliegue en producción se necesitan tenemos los siguientes recursos:
+
+Servidores de bases de datos de producción, preproducción y desarrollo. Los scripts se encuentran en sus carpetas correspondientes.
 
 - Por definir
 
@@ -119,3 +217,17 @@ En nuestro caso queremos que la lógica de negocio no sea rígida, restringiendo
 
 1.  En cualquier estado o situación del expediente, es posible hacer cualquier cosa que no esté expresamente prohibida. En lugar de listar lo únicamente permitido, listar lo expresamente prohibido y permitir que se pueda hacer cualquier operación mientras no esté expresamente prohibida. Por ejemplo, una prohibición genérica sería que no se puede finalizar una fase si quedan trámites sin finalizar. Otra prohibición sería que no se puede iniciar la fase resolver si no se ha finalizado la fase análisis solicitud)
 2.  Las prohibiciones que definen la lógica de la tramitación ha de obtenerse de valores definidos en tablas, no internamente escrito en el código. De esta forma la modificación de un precepto legal (y por tanto la lógica del procedimiento) no requiere modificar macros si no que solo requiere modificar los datos de las prohibiciones del procedimiento. Esto hace que el sistema se adapte rápidamente a los cambios.
+
+Datos estructurales vs datos
+
+### Tipos de expedientes
+
+Los tipos de expedientes se definen en la tabla maestra TIPOS_EXPEDIENTES. Como se puede apreciar está asociado al tipo de titular de la instalación y tipo de uso de la misma. Digamos que es una clasificación de las distintas particularidades que tiene la legislación respecto a la tramitación en cada caso. El tipo de expediente define la lógica de la tramitación pues será una de las variables a tener en cuenta de cara a definir las restricciones o prohibiciones de la lógica de negocio.
+
+### Tipos de solicitudes
+
+Los tipos de solicitudes están claramente definidas en la legislación y definen el resultado buscado por el solicitante. En la mayoría de los casos se obtiene una resolución. En otros se obtiene una toma de razón o simplemente una copia de documentación con un oficio. En cualquier caso siempre se pide un resultado. Si no se obtiene se produce una resolución de denegación, inadmisión, caducidad, aceptación renuncia, etc. para finalizar la solicitud.
+
+### Tipos de fases
+
+Hay diferentes tipos de fases, muchas de ellas son comunes a los distintos tipos de solicitudes. Los tipos de fases se definen en la tabla TIPOS_FASES. La característica principal de una fase es que tiene fechas de inicio y fin y que tiene un resultado de la misma. Una fase es un conjunto de trámites para obtener un requisito para alcanzar el objetivo de la solicitud. Por ejemplo obtención del pronunciamiento ambiental, de los condicionantes de los organismos, de la exposición del proyecto en información pública o de un informe favorable de un organismo externo.
