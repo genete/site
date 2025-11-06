@@ -1,0 +1,456 @@
+{
+  "database_info": {
+    "connection_url": "jdbc:hsqldb:hsql://10.34.129.102:9001/bdat_desarrollo",
+    "type": "hsqldb",
+    "user": "SA",
+    "driver": "org.hsqldb.jdbc.JDBCDriver"
+  },
+  "forms": [
+    {
+      "name": "FormularioCreaNuevoExpediente",
+      "source_file": "forms\\Obj11\\content.xml",
+      "datasource": null,
+      "command": "PUBLIC.T.EXPEDIENTES",
+      "command_type": "table",
+      "allow_updates": null,
+      "allow_deletes": "false",
+      "allow_inserts": null,
+      "events": {},
+      "controls": [
+        {
+          "type": "formatted-text",
+          "id": "control1",
+          "name": "ID",
+          "label": null,
+          "bound-field": "ID",
+          "value-type": null,
+          "datasource": null,
+          "list-source": null,
+          "control-source": null,
+          "default-value": null,
+          "min-value": "0",
+          "max-value": "100000000",
+          "readonly": "true",
+          "required": "false",
+          "validation": "true",
+          "events": {},
+          "properties": {
+            "control-implementation": "ooo:com.sun.star.form.component.NumericField"
+          },
+          "columns": []
+        },
+        {
+          "type": "formatted-text",
+          "id": "control2",
+          "name": "NUMERO_AT",
+          "label": null,
+          "bound-field": "NUMERO_AT",
+          "value-type": null,
+          "datasource": null,
+          "list-source": null,
+          "control-source": null,
+          "default-value": null,
+          "min-value": "0",
+          "max-value": "10000000",
+          "readonly": null,
+          "required": "false",
+          "validation": "true",
+          "events": {},
+          "properties": {
+            "control-implementation": "ooo:com.sun.star.form.component.NumericField"
+          },
+          "columns": []
+        },
+        {
+          "type": "listbox",
+          "id": "control3",
+          "name": "RESPONSABLE_ID",
+          "label": null,
+          "bound-field": "RESPONSABLE_ID",
+          "value-type": null,
+          "datasource": null,
+          "list-source": "SELECT CONCAT(NOMBRE, ' ', APELLIDO1, COALESCE(' ' || APELLIDO2, '')) AS NOMBRE_COMPLETO, ID FROM PUBLIC.T.USUARIOS;",
+          "control-source": null,
+          "default-value": null,
+          "min-value": null,
+          "max-value": null,
+          "readonly": null,
+          "required": "false",
+          "validation": null,
+          "events": {},
+          "properties": {
+            "control-implementation": "ooo:com.sun.star.form.component.ListBox",
+            "dropdown": "true",
+            "size": "20",
+            "bound-column": "1",
+            "list-source-type": "sql-pass-through"
+          },
+          "columns": []
+        },
+        {
+          "type": "button",
+          "id": "control4",
+          "name": "BotonNuevoAT",
+          "label": "Asigna AT",
+          "bound-field": null,
+          "value-type": null,
+          "datasource": null,
+          "list-source": null,
+          "control-source": null,
+          "default-value": null,
+          "min-value": null,
+          "max-value": null,
+          "readonly": null,
+          "required": null,
+          "validation": null,
+          "events": {
+            "form:performaction": "TramitarLib.FormularioExpedientes.NuevoExpedienteIncrementado"
+          },
+          "properties": {
+            "control-implementation": "ooo:com.sun.star.form.component.CommandButton",
+            "target-frame": "",
+            "delay-for-repeat": "PT0.050000000S",
+            "image-position": "center"
+          },
+          "columns": []
+        },
+        {
+          "type": "button",
+          "id": "control5",
+          "name": "BotonGuardayCierra",
+          "label": "Guardar y Cerrar",
+          "bound-field": null,
+          "value-type": null,
+          "datasource": null,
+          "list-source": null,
+          "control-source": null,
+          "default-value": null,
+          "min-value": null,
+          "max-value": null,
+          "readonly": null,
+          "required": null,
+          "validation": null,
+          "events": {
+            "form:performaction": "TramitarLib.FormularioExpedientes.GuardarYCerrarFormulario"
+          },
+          "properties": {
+            "control-implementation": "ooo:com.sun.star.form.component.CommandButton",
+            "target-frame": "",
+            "delay-for-repeat": "PT0.050000000S",
+            "image-position": "center"
+          },
+          "columns": []
+        }
+      ],
+      "subforms": []
+    },
+    {
+      "name": "FormularioEditarUsuarioExpedientes",
+      "source_file": "forms\\Obj21\\content.xml",
+      "datasource": null,
+      "command": "PUBLIC.T.EXPEDIENTES",
+      "command_type": "table",
+      "allow_updates": null,
+      "allow_deletes": "false",
+      "allow_inserts": "false",
+      "events": {},
+      "controls": [
+        {
+          "type": "button",
+          "id": "control1",
+          "name": "BotonCerrar",
+          "label": "Cerrar Formulario",
+          "bound-field": null,
+          "value-type": null,
+          "datasource": null,
+          "list-source": null,
+          "control-source": null,
+          "default-value": null,
+          "min-value": null,
+          "max-value": null,
+          "readonly": null,
+          "required": null,
+          "validation": null,
+          "events": {
+            "form:performaction": "TramitarLib.FormularioExpedientes.GuardarYCerrarFormulario"
+          },
+          "properties": {
+            "control-implementation": "ooo:com.sun.star.form.component.CommandButton",
+            "target-frame": "",
+            "delay-for-repeat": "PT0.050000000S",
+            "image-position": "center"
+          },
+          "columns": []
+        },
+        {
+          "type": "grid",
+          "id": "control2",
+          "name": "ControlTablaExpdientes",
+          "label": null,
+          "bound-field": null,
+          "value-type": null,
+          "datasource": null,
+          "list-source": null,
+          "control-source": null,
+          "default-value": null,
+          "min-value": null,
+          "max-value": null,
+          "readonly": null,
+          "required": null,
+          "validation": null,
+          "events": {},
+          "properties": {
+            "control-implementation": "ooo:com.sun.star.form.component.GridControl"
+          },
+          "columns": [
+            {
+              "type": "column",
+              "id": null,
+              "name": "CampoID",
+              "label": "ID",
+              "bound-field": null,
+              "value-type": null,
+              "datasource": null,
+              "list-source": null,
+              "control-source": null,
+              "default-value": null,
+              "min-value": null,
+              "max-value": null,
+              "readonly": null,
+              "required": null,
+              "validation": null,
+              "events": {},
+              "properties": {
+                "control-implementation": "ooo:NumericField"
+              },
+              "columns": []
+            },
+            {
+              "type": "column",
+              "id": null,
+              "name": "CampoNumeroAT",
+              "label": "NumeroAT",
+              "bound-field": null,
+              "value-type": null,
+              "datasource": null,
+              "list-source": null,
+              "control-source": null,
+              "default-value": null,
+              "min-value": null,
+              "max-value": null,
+              "readonly": null,
+              "required": null,
+              "validation": null,
+              "events": {},
+              "properties": {
+                "control-implementation": "ooo:NumericField"
+              },
+              "columns": []
+            },
+            {
+              "type": "column",
+              "id": null,
+              "name": "CampoResponsableID",
+              "label": "Nombre Responsable",
+              "bound-field": null,
+              "value-type": null,
+              "datasource": null,
+              "list-source": null,
+              "control-source": null,
+              "default-value": null,
+              "min-value": null,
+              "max-value": null,
+              "readonly": null,
+              "required": null,
+              "validation": null,
+              "events": {},
+              "properties": {
+                "control-implementation": "ooo:ListBox",
+                "text-style-name": "ctrl1"
+              },
+              "columns": []
+            }
+          ]
+        },
+        {
+          "type": "column",
+          "id": null,
+          "name": "CampoID",
+          "label": "ID",
+          "bound-field": null,
+          "value-type": null,
+          "datasource": null,
+          "list-source": null,
+          "control-source": null,
+          "default-value": null,
+          "min-value": null,
+          "max-value": null,
+          "readonly": null,
+          "required": null,
+          "validation": null,
+          "events": {},
+          "properties": {
+            "control-implementation": "ooo:NumericField"
+          },
+          "columns": []
+        },
+        {
+          "type": "formatted-text",
+          "id": "control3",
+          "name": null,
+          "label": null,
+          "bound-field": "ID",
+          "value-type": null,
+          "datasource": null,
+          "list-source": null,
+          "control-source": null,
+          "default-value": null,
+          "min-value": "0",
+          "max-value": "10000000",
+          "readonly": "true",
+          "required": "false",
+          "validation": null,
+          "events": {},
+          "properties": {},
+          "columns": []
+        },
+        {
+          "type": "column",
+          "id": null,
+          "name": "CampoNumeroAT",
+          "label": "NumeroAT",
+          "bound-field": null,
+          "value-type": null,
+          "datasource": null,
+          "list-source": null,
+          "control-source": null,
+          "default-value": null,
+          "min-value": null,
+          "max-value": null,
+          "readonly": null,
+          "required": null,
+          "validation": null,
+          "events": {},
+          "properties": {
+            "control-implementation": "ooo:NumericField"
+          },
+          "columns": []
+        },
+        {
+          "type": "formatted-text",
+          "id": "control4",
+          "name": null,
+          "label": null,
+          "bound-field": "NUMERO_AT",
+          "value-type": null,
+          "datasource": null,
+          "list-source": null,
+          "control-source": null,
+          "default-value": null,
+          "min-value": "0",
+          "max-value": "1000000",
+          "readonly": "true",
+          "required": "false",
+          "validation": null,
+          "events": {},
+          "properties": {},
+          "columns": []
+        },
+        {
+          "type": "column",
+          "id": null,
+          "name": "CampoResponsableID",
+          "label": "Nombre Responsable",
+          "bound-field": null,
+          "value-type": null,
+          "datasource": null,
+          "list-source": null,
+          "control-source": null,
+          "default-value": null,
+          "min-value": null,
+          "max-value": null,
+          "readonly": null,
+          "required": null,
+          "validation": null,
+          "events": {},
+          "properties": {
+            "control-implementation": "ooo:ListBox",
+            "text-style-name": "ctrl1"
+          },
+          "columns": []
+        },
+        {
+          "type": "listbox",
+          "id": "control5",
+          "name": null,
+          "label": null,
+          "bound-field": "RESPONSABLE_ID",
+          "value-type": null,
+          "datasource": null,
+          "list-source": "SELECT CONCAT(NOMBRE, ' ', APELLIDO1, COALESCE(' ' || APELLIDO2, '')) AS NOMBRE_COMPLETO, ID FROM PUBLIC.T.USUARIOS;",
+          "control-source": null,
+          "default-value": null,
+          "min-value": null,
+          "max-value": null,
+          "readonly": null,
+          "required": "false",
+          "validation": null,
+          "events": {},
+          "properties": {
+            "bound-column": "1",
+            "list-source-type": "sql"
+          },
+          "columns": []
+        }
+      ],
+      "subforms": []
+    },
+    {
+      "name": "Formulario",
+      "source_file": "forms\\Obj31\\content.xml",
+      "datasource": null,
+      "command": null,
+      "command_type": "table",
+      "allow_updates": null,
+      "allow_deletes": null,
+      "allow_inserts": null,
+      "events": {},
+      "controls": [
+        {
+          "type": "button",
+          "id": "control1",
+          "name": "BotonClaude",
+          "label": "Botón Claude",
+          "bound-field": null,
+          "value-type": null,
+          "datasource": null,
+          "list-source": null,
+          "control-source": null,
+          "default-value": null,
+          "min-value": null,
+          "max-value": null,
+          "readonly": null,
+          "required": null,
+          "validation": null,
+          "events": {
+            "form:approveaction": "IntrospectionLib.Claude.GenerarDocumentacionMarkdownMejorada"
+          },
+          "properties": {
+            "control-implementation": "ooo:com.sun.star.form.component.CommandButton",
+            "target-frame": "",
+            "delay-for-repeat": "PT0.050000000S",
+            "image-position": "center"
+          },
+          "columns": []
+        }
+      ],
+      "subforms": []
+    }
+  ],
+  "files_processed": [
+    "forms\\Obj11\\content.xml",
+    "forms\\Obj21\\content.xml",
+    "forms\\Obj31\\content.xml"
+  ],
+  "total_forms": 3
+}

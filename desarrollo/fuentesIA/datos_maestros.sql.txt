@@ -1,0 +1,71 @@
+-- =====================================================
+-- DATOS MAESTROS - Definicion de logica de negocio
+-- =====================================================
+-- Generado automaticamente desde bdat.script
+-- Tablas incluidas: TIPOS_EXPEDIENTES, TIPOS_FASES, TIPOS_IA, TIPOS_PROYECTOS, TIPOS_SOLICITUDES
+-- =====================================================
+
+-- Tabla: TIPOS_EXPEDIENTES
+-- --------------------------------------------------
+INSERT INTO TIPOS_EXPEDIENTES VALUES(0,'Transporte','Expediente que tramita instalaciones de transporte de energ\u00eda el\u00e9ctrica')
+INSERT INTO TIPOS_EXPEDIENTES VALUES(1,'Distribuci\u00f3n','Expediente que tramita instalaciones de distribuci\u00f3n de energ\u00eda el\u00e9ctrica')
+INSERT INTO TIPOS_EXPEDIENTES VALUES(2,'Distribuci\u00f3n cedida','Expediente que tramita instalaciones de distribuci\u00f3n de energ\u00eda el\u00e9ctrica cedidas de particular a compa\u00f1\u00eda')
+INSERT INTO TIPOS_EXPEDIENTES VALUES(3,'Renovable','Expediente que tramita instalaciones de generaci\u00f3n de energ\u00eda el\u00e9ctrica por fuentes renovables')
+INSERT INTO TIPOS_EXPEDIENTES VALUES(4,'Autoconsumo','Expediente que tramita instalaciones de autoconsumo')
+INSERT INTO TIPOS_EXPEDIENTES VALUES(5,'LineaDirecta','Expediente que tramita l\u00edneas directas para consumo')
+INSERT INTO TIPOS_EXPEDIENTES VALUES(6,'Convencional','Expediente que tramita instalaciones de generaci\u00f3n de energ\u00eda el\u00e9ctrica por fuentes convencionales')
+INSERT INTO TIPOS_EXPEDIENTES VALUES(7,'Otros','Otros tipos de expedientes')
+
+-- Tabla: TIPOS_FASES
+-- --------------------------------------------------
+INSERT INTO TIPOS_FASES VALUES(0,'SOLICITUD_INICIADA','Solicitud Iniciada')
+INSERT INTO TIPOS_FASES VALUES(1,'CONSULTA_MINISTERIO','Consulta Ministerio. Exclusivo instalaciones de transporte')
+INSERT INTO TIPOS_FASES VALUES(2,'COMPATIBILIDAD_AMBIENTAL','Compatibilidad Ambiental. Exclusivo para instalaciones con AAU o AAUS')
+INSERT INTO TIPOS_FASES VALUES(3,'ADMISION_TRAMITE','Admisi\u00f3n a Tr\u00e1mite. Solo para instalaciones de generaci\u00f3n renovable')
+INSERT INTO TIPOS_FASES VALUES(4,'CONSULTAS','Consultas. Conforme al RD 1955/2000')
+INSERT INTO TIPOS_FASES VALUES(5,'INFORMACION_PUBLICA','Informaci\u00f3n P\u00fablica')
+INSERT INTO TIPOS_FASES VALUES(6,'FIGURA_AMBIENTAL_EXTERNA','Figura Ambiental Externa. Modificaci\u00f3n de instalaciones que ya disponen de AAU/AAUS o instalaciones nuevas o modificaciones que tengan CA')
+INSERT INTO TIPOS_FASES VALUES(7,'AAU_AAUS','AAU/AAUs Integrada. Instalaciones nuevas sometidas a AAU/AAUS cuya tramitaci\u00f3n se integra en la tramitaci\u00f3n sustativa')
+INSERT INTO TIPOS_FASES VALUES(8,'RESOLUCION','Resoluci\u00f3n. Normalmente favorable o condicionada')
+INSERT INTO TIPOS_FASES VALUES(9,'RESOLUCION_DESISTIMIENTO','Resoluci\u00f3n Desistimiento. Puede ser expresa o consecuencia de no responder a mejora de la solicitud')
+INSERT INTO TIPOS_FASES VALUES(10,'RESOLUCION_INADMISION','Resoluci\u00f3n Inadmisi\u00f3n. No admisi\u00f3n a tr\u00e1mite para instalaciones de generaci\u00f3n renovable')
+INSERT INTO TIPOS_FASES VALUES(11,'RESOLUCION_DESFAVORABLE','Resoluci\u00f3n Desfavorable. Por informe negativo externo (Ministerio, otros organismos)')
+INSERT INTO TIPOS_FASES VALUES(12,'RESOLUCION_ARCHIVO','Resoluci\u00f3n Archivo')
+
+-- Tabla: TIPOS_IA
+-- --------------------------------------------------
+INSERT INTO TIPOS_IA VALUES(0,'AAI','Autorizaci\u00f3n Ambiental Integrada')
+INSERT INTO TIPOS_IA VALUES(1,'AAU','Autorizaci\u00f3n Ambiental Unificada')
+INSERT INTO TIPOS_IA VALUES(2,'AAUs','Autorizaci\u00f3n Ambiental Unificada Simplificada')
+INSERT INTO TIPOS_IA VALUES(3,'CA','Calificaci\u00f3n Ambiental')
+INSERT INTO TIPOS_IA VALUES(4,'EXENTO','Exento de instrumento ambiental')
+
+-- Tabla: TIPOS_PROYECTOS
+-- --------------------------------------------------
+INSERT INTO TIPOS_PROYECTOS VALUES(0,'Principal')
+INSERT INTO TIPOS_PROYECTOS VALUES(1,'Anexo')
+INSERT INTO TIPOS_PROYECTOS VALUES(2,'Modificado')
+
+-- Tabla: TIPOS_SOLICITUDES
+-- --------------------------------------------------
+INSERT INTO TIPOS_SOLICITUDES VALUES(0,'AAP','Autorizaci\u00f3n Administratvia Previa')
+INSERT INTO TIPOS_SOLICITUDES VALUES(1,'AAC','Autorizaci\u00f3n Administrativa de Construcci\u00f3n')
+INSERT INTO TIPOS_SOLICITUDES VALUES(2,'DUP','Declaraci\u00f3n de Utilidad P\u00fablica')
+INSERT INTO TIPOS_SOLICITUDES VALUES(3,'AAP+AAC','Autorizaci\u00f3n Administratvia Previa y Autorizaci\u00f3n Administrativa de Construcci\u00f3n')
+INSERT INTO TIPOS_SOLICITUDES VALUES(4,'AAP+DUP','Autorizaci\u00f3n Administratvia Previa y Declaraci\u00f3n de Utilidad P\u00fablica')
+INSERT INTO TIPOS_SOLICITUDES VALUES(5,'AAC+DUP','Autorizaci\u00f3n Administrativa de Construcci\u00f3n  y Declaraci\u00f3n de Utilidad P\u00fablica')
+INSERT INTO TIPOS_SOLICITUDES VALUES(6,'AAP+AAC+DUP','Autorizaci\u00f3n Administratvia Previa, Autorizaci\u00f3n Administrativa de Construcci\u00f3n y Declaraci\u00f3n de Utilidad P\u00fablica')
+INSERT INTO TIPOS_SOLICITUDES VALUES(7,'AAE','Autorizaci\u00f3n Administrativa de Explotaci\u00f3n')
+INSERT INTO TIPOS_SOLICITUDES VALUES(8,'AAT','Autorizaci\u00f3n Administrativa de Transmisi\u00f3n de Titularidad')
+INSERT INTO TIPOS_SOLICITUDES VALUES(9,'AAE+AAT','Autorizaci\u00f3n Administrativa de Explotaci\u00f3n y Autorizaci\u00f3n Administrativa de Transmisi\u00f3n de Titularidad')
+INSERT INTO TIPOS_SOLICITUDES VALUES(10,'CIERRE','Autorizaci\u00f3n Administrativa de Cierre')
+INSERT INTO TIPOS_SOLICITUDES VALUES(11,'DESISTIMIENTO','Desistimiento de la Solicitud')
+INSERT INTO TIPOS_SOLICITUDES VALUES(12,'RENUNCIA','Renuncia de la Autorizaci\u00f3n')
+INSERT INTO TIPOS_SOLICITUDES VALUES(13,'AMPLIACI\u00d3N PLAZO','Ampliaci\u00f3n de Plazo')
+INSERT INTO TIPOS_SOLICITUDES VALUES(14,'INTERESADO','Condici\u00f3n de Intersado en el expediente')
+INSERT INTO TIPOS_SOLICITUDES VALUES(15,'RECURSO','Interposici\u00f3n de Recurso Administrativo')
+INSERT INTO TIPOS_SOLICITUDES VALUES(16,'RAIPEE','Registro Adminsitrativo de Instalaciones de Producci\u00f3n de Energ\u00eda El\u00e9ctrica')
+INSERT INTO TIPOS_SOLICITUDES VALUES(17,'CORRECCI\u00d3N','Correcci\u00f3n de errores en resoluci\u00f3n')
+INSERT INTO TIPOS_SOLICITUDES VALUES(18,'COPIA','Copia de expediente')
+INSERT INTO TIPOS_SOLICITUDES VALUES(19,'OTRO','Otro tipo de solicitud no definida')
+

@@ -1,0 +1,714 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<modulos-basic-consolidados archivo-origen="BdatosAT.odb" fecha-extraccion="2025-11-02T07:32:56.395368" total-bibliotecas="3" total-modulos="2">
+  <biblioteca nombre="IntrospectionLib" cantidad-modulos="1">
+    <modulo nombre="Claude" path-original="Basic/IntrospectionLib/Claude.xml" name="Claude" language="StarBasic" moduleType="normal">
+      <codigo>
+Sub GenerarDocumentacionMarkdownMejorada()
+    Dim oDoc As Object
+    Dim oForms As Object
+    Dim sMarkdown As String
+    Dim sFilePath As String
+    Dim FormulariosProcesados As Object
+    
+    ' Crear diccionario para evitar duplicados
+    Set FormulariosProcesados = CreateObject("Scripting.Dictionary")
+    
+    ' Obtener el documento actual
+    oDoc = ThisDatabaseDocument
+    oForms = oDoc.FormDocuments
+    
+    ' Inicializar el contenido Markdown
+    sMarkdown = "# Documentación de Formularios - " &amp; oDoc.Title &amp; Chr(10) &amp; Chr(10)
+    sMarkdown = sMarkdown &amp; "**Fecha de generación:** " &amp; Format(Now(), "DD/MM/YYYY HH:MM:SS") &amp; Chr(10) &amp; Chr(10)
+    sMarkdown = sMarkdown &amp; "**Total de formularios:** " &amp; oForms.Count &amp; Chr(10) &amp; Chr(10)
+    
+    ' Añadir tabla de referencia de columnas
+    sMarkdown = sMarkdown &amp; "## Referencia de columnas de controles" &amp; Chr(10) &amp; Chr(10)
+    sMarkdown = sMarkdown &amp; "| Columna | Descripción |" &amp; Chr(10)
+    sMarkdown = sMarkdown &amp; "|---------|-------------|" &amp; Chr(10)
+    sMarkdown = sMarkdown &amp; "| **Nombre control** | Identificador único del control en el formulario |" &amp; Chr(10)
+    sMarkdown = sMarkdown &amp; "| **Tipo control** | Tipo de control (Botón, Campo texto, ListBox, Grid/Tabla, etc.) |" &amp; Chr(10)
+    sMarkdown = sMarkdown &amp; "| **Campo BD** | Campo de la base de datos vinculado al control |" &amp; Chr(10)
+    sMarkdown = sMarkdown &amp; "| **Tabla origen** | Tabla del campo (si es diferente a la tabla del formulario) |" &amp; Chr(10)
+    sMarkdown = sMarkdown &amp; "| **Habilitado** | Indica si el control está activo (Sí/No) |" &amp; Chr(10)
+    sMarkdown = sMarkdown &amp; "| **Solo lectura** | Indica si el control es de solo lectura (Sí/No) |" &amp; Chr(10)
+    sMarkdown = sMarkdown &amp; "| **Requerido** | Indica si el campo es obligatorio (Sí/No) |" &amp; Chr(10)
+    sMarkdown = sMarkdown &amp; "| **Valor por defecto** | Valor inicial que toma el control |" &amp; Chr(10)
+    sMarkdown = sMarkdown &amp; "| **Origen lista** | Para ComboBox/ListBox: consulta SQL que alimenta la lista |" &amp; Chr(10)
+    sMarkdown = sMarkdown &amp; "| **Tipo botón** | Para botones: tipo de acción (Normal/Submit/Reset/URL) |" &amp; Chr(10)
+    sMarkdown = sMarkdown &amp; Chr(10)
+    sMarkdown = sMarkdown &amp; "---" &amp; Chr(10) &amp; Chr(10)
+    
+    ' Iterar sobre todos los formularios
+    Dim i As Integer
+    For i = 0 To oForms.Count - 1
+        Dim sFormName As String
+        sFormName = oForms.getByIndex(i).Name
+        
+        ' Evitar duplicados
+        If Not FormulariosProcesados.Exists(sFormName) Then
+            FormulariosProcesados.Add sFormName, True
+            
+            sMarkdown = sMarkdown &amp; "## Formulario: " &amp; sFormName &amp; Chr(10) &amp; Chr(10)
+            
+            ' Obtener información del formulario
+            Dim oFormDoc As Object
+            oFormDoc = oForms.getByName(sFormName)
+            sMarkdown = sMarkdown &amp; DocumentarFormularioMejorado(oFormDoc, sFormName)
+            sMarkdown = sMarkdown &amp; "---" &amp; Chr(10) &amp; Chr(10)
+        End If
+    Next i
+    
+    ' Guardar el archivo Markdown
+    sFilePath = ObtenerRutaGuardado()
+    If sFilePath &lt;&gt; "" Then
+        GuardarArchivoTexto(sFilePath, sMarkdown)
+        MsgBox "Documentación generada exitosamente en:" &amp; Chr(10) &amp; sFilePath, 64, "Éxito"
+    End If
+End Sub
+
+Function DocumentarFormularioMejorado(oFormDoc As Object, sFormName As String) As String
+    Dim sResult As String
+    Dim oComponent As Object
+    Dim oDrawPage As Object
+    Dim oForm As Object
+    Dim sTabla As String
+    Dim sDataSource As String
+    Dim sTipoComando As String
+    Dim bPermiteNuevos As Boolean
+    Dim bPermiteModificar As Boolean
+    Dim bPermiteEliminar As Boolean
+    
+    On Error Resume Next
+    
+    ' Abrir el documento
+    oComponent = oFormDoc.open()
+    
+    If Not IsNull(oComponent) Then
+        oDrawPage = oComponent.getDrawPage()
+        
+        ' Obtener el formulario principal
+        If oDrawPage.getForms().getCount() &gt; 0 Then
+            oForm = oDrawPage.getForms().getByIndex(0)
+            
+            ' Información de la tabla asociada
+            sTabla = ""
+            On Error Resume Next
+            ' Intentar obtener el Command del formulario
+            If Not IsNull(oForm) Then
+                sTabla = oForm.Command
+            End If
+            
+            ' Si está vacío, intentar desde CommandType
+            If sTabla = "" Or IsNull(sTabla) Then
+                ' Verificar si hay DataSource configurado
+                sDataSource = oForm.DataSourceName
+                If sDataSource &lt;&gt; "" Then
+                    sTabla = oForm.Command
+                End If
+            End If
+            
+            If sTabla = "" Or IsNull(sTabla) Then
+                sTabla = "(No especificada)"
+            End If
+            On Error GoTo 0
+            
+            sResult = sResult &amp; "**Tabla/Consulta asociada:** `" &amp; sTabla &amp; "`" &amp; Chr(10) &amp; Chr(10)
+            
+            ' Tipo de comando
+            On Error Resume Next
+            Select Case oForm.CommandType
+                Case 0: sTipoComando = "Tabla"
+                Case 1: sTipoComando = "Consulta"
+                Case 2: sTipoComando = "SQL"
+                Case Else: sTipoComando = "Desconocido"
+            End Select
+            On Error GoTo 0
+            
+            sResult = sResult &amp; "**Tipo de comando:** " &amp; sTipoComando &amp; Chr(10) &amp; Chr(10)
+            
+            ' Propiedades adicionales del formulario
+            On Error Resume Next
+            bPermiteNuevos = oForm.AllowInserts
+            bPermiteModificar = oForm.AllowUpdates
+            bPermiteEliminar = oForm.AllowDeletes
+            On Error GoTo 0
+            
+            sResult = sResult &amp; "**Propiedades:**" &amp; Chr(10)
+            sResult = sResult &amp; "- Permite nuevos registros: " &amp; IIf(bPermiteNuevos, "Sí", "No") &amp; Chr(10)
+            sResult = sResult &amp; "- Permite modificaciones: " &amp; IIf(bPermiteModificar, "Sí", "No") &amp; Chr(10)
+            sResult = sResult &amp; "- Permite eliminaciones: " &amp; IIf(bPermiteEliminar, "Sí", "No") &amp; Chr(10) &amp; Chr(10)
+            
+            ' Listar controles con información detallada
+            sResult = sResult &amp; "### Controles del formulario" &amp; Chr(10) &amp; Chr(10)
+            sResult = sResult &amp; "| Nombre control | Tipo control | Campo BD | Tabla origen | Habilitado | Solo lectura | Requerido | Valor por defecto | Origen lista | Tipo botón |" &amp; Chr(10)
+            sResult = sResult &amp; "|----------------|--------------|----------|--------------|------------|--------------|-----------|-------------------|--------------|------------|" &amp; Chr(10)
+            
+            ' Declarar variables para el bucle
+            Dim oShape As Object
+            Dim oModel As Object
+            Dim sNombreControl As String
+            Dim sTipo As String
+            Dim sCampo As String
+            Dim sTempCampo As String
+            Dim sOrigenControl As String
+            Dim oBoundField As Object
+            Dim bHabilitado As String
+            Dim bSoloLectura As String
+            Dim bRequerido As String
+            Dim sValorDefecto As String
+            Dim sOrigenLista As String
+            Dim sTipoBoton As String
+            
+            ' Iterar sobre los shapes
+            Dim j As Integer
+            For j = 0 To oDrawPage.getCount() - 1
+                oShape = oDrawPage.getByIndex(j)
+                
+                If oShape.supportsService("com.sun.star.drawing.ControlShape") Then
+                    oModel = oShape.getControl()
+                    
+                    ' Inicializar todas las variables al principio de cada iteración
+                    sNombreControl = ""
+                    sTipo = ""
+                    sCampo = "N/A"
+                    sTempCampo = ""
+                    sOrigenControl = "N/A"
+                    Set oBoundField = Nothing
+                    bHabilitado = "N/A"
+                    bSoloLectura = "N/A"
+                    bRequerido = "N/A"
+                    sValorDefecto = "N/A"
+                    sOrigenLista = "N/A"
+                    sTipoBoton = "N/A"
+                    
+                    ' Nombre del control
+                    On Error Resume Next
+                    sNombreControl = oModel.Name
+                    On Error GoTo 0
+                    
+                    ' Tipo de control
+                    sTipo = ObtenerTipoControlDetallado(oModel)
+                    
+                    ' Campo asociado
+                    sCampo = "N/A"
+                    On Error Resume Next
+                    If HasProperty(oModel, "DataField") Then
+                        'Dim sTempCampo As String
+                        sTempCampo = oModel.DataField
+                        If sTempCampo &lt;&gt; "" Then
+                            sCampo = sTempCampo
+                        End If
+                    End If
+                    On Error GoTo 0
+                    
+                    ' Tabla origen (si es diferente a la del formulario)
+                    sOrigenControl = "N/A"
+                    On Error Resume Next
+                    Set oBoundField = oModel.BoundField
+                    If Not IsNull(oBoundField) Then
+                        sOrigenControl = oBoundField.TableName
+                        If sOrigenControl = sTabla Or sOrigenControl = "" Then
+                            sOrigenControl = "N/A"
+                        End If
+                    End If
+                    On Error GoTo 0
+                    
+                    ' Habilitado
+                    On Error Resume Next
+                    If oModel.Enabled Then
+                        bHabilitado = "Sí"
+                    Else
+                        bHabilitado = "No"
+                    End If
+                    If Err.Number &lt;&gt; 0 Then bHabilitado = "N/A"
+                    On Error GoTo 0
+                    
+                    ' Solo lectura
+                    On Error Resume Next
+                    If oModel.ReadOnly Then
+                        bSoloLectura = "Sí"
+                    Else
+                        bSoloLectura = "No"
+                    End If
+                    If Err.Number &lt;&gt; 0 Then bSoloLectura = "N/A"
+                    On Error GoTo 0
+                    
+                    ' Requerido
+                    On Error Resume Next
+                    If HasProperty(oModel, "IsNullable") Then
+                        If Not oModel.IsNullable Then
+                            bRequerido = "Sí"
+                        Else
+                            bRequerido = "No"
+                        End If
+                    Else
+                        bRequerido = "N/A"
+                    End If
+                    On Error GoTo 0
+                    
+                    ' Valor por defecto
+                    On Error Resume Next
+                    sValorDefecto = ""
+                    If HasProperty(oModel, "DefaultText") Then
+                        sValorDefecto = oModel.DefaultText
+                    ElseIf HasProperty(oModel, "DefaultValue") Then
+                        sValorDefecto = CStr(oModel.DefaultValue)
+                    ElseIf HasProperty(oModel, "DefaultDate") Then
+                        sValorDefecto = CStr(oModel.DefaultDate)
+                    End If
+                    If sValorDefecto = "" Then sValorDefecto = "N/A"
+                    On Error GoTo 0
+                    
+                    ' Origen lista (para ComboBox y ListBox)
+                    sOrigenLista = "N/A"
+                    If sTipo = "ComboBox" Or sTipo = "ListBox" Then
+                        On Error Resume Next
+                        Dim sListSource As String
+                        sListSource = ""
+                        If IsArray(oModel.ListSource) Then
+                            If UBound(oModel.ListSource) &gt;= 0 Then
+                                sListSource = oModel.ListSource(0)
+                            End If
+                        Else
+                            sListSource = oModel.ListSource
+                        End If
+                        If sListSource &lt;&gt; "" Then
+                            ' Mostrar el SQL completo (sin truncar)
+                            sOrigenLista = sListSource                           
+                        End If
+                        On Error GoTo 0
+                    End If
+                    
+                    ' Tipo de botón
+                    sTipoBoton = "N/A"
+                    If sTipo = "Botón" Then
+                        On Error Resume Next
+                        Select Case oModel.ButtonType
+                            Case 0: sTipoBoton = "Normal"
+                            Case 1: sTipoBoton = "Submit"
+                            Case 2: sTipoBoton = "Reset"
+                            Case 3: sTipoBoton = "URL"
+                        End Select
+                        On Error GoTo 0
+                    End If
+                    
+                    ' Agregar fila a la tabla
+                    sResult = sResult &amp; "| " &amp; sNombreControl &amp; " | " &amp; sTipo &amp; " | `" &amp; sCampo &amp; "` | " &amp; sOrigenControl &amp; " | " &amp; bHabilitado &amp; " | " &amp; bSoloLectura &amp; " | " &amp; bRequerido &amp; " | " &amp; sValorDefecto &amp; " | " &amp; EscaparMarkdown(sOrigenLista) &amp; " | " &amp; sTipoBoton &amp; " |" &amp; Chr(10)
+                End If
+            Next j
+            
+            sResult = sResult &amp; Chr(10)
+            
+            ' Documentar subformularios si existen
+            sResult = sResult &amp; DocumentarSubformularios(oDrawPage)
+            
+            ' Documentar eventos y macros
+            sResult = sResult &amp; DocumentarEventosMejorado(oForm, oDrawPage)
+        Else
+            sResult = sResult &amp; "*El formulario no contiene controles o no se pudo acceder a ellos.*" &amp; Chr(10) &amp; Chr(10)
+        End If
+        
+        ' Cerrar el formulario después de documentarlo
+        On Error Resume Next
+        If Not IsNull(oComponent) Then
+            ' Cerrar la ventana si está abierta
+            Dim oFrame As Object
+            oFrame = oComponent.getCurrentController().getFrame()
+            If Not IsNull(oFrame) Then
+                oFrame.close(True)
+            End If
+            ' Descargar el documento embebido
+            oComponent.dispose()
+        End If
+    On Error GoTo 0
+    Else
+        sResult = sResult &amp; "*No se pudo abrir el formulario para inspección.*" &amp; Chr(10) &amp; Chr(10)
+    End If
+    
+    DocumentarFormularioMejorado = sResult
+End Function
+
+Function ObtenerTipoControlDetallado(oModel As Object) As String
+    Dim sTipo As String
+    
+    On Error Resume Next
+    
+    If oModel.supportsService("com.sun.star.form.component.TextField") Then
+        sTipo = "Campo texto"
+    ElseIf oModel.supportsService("com.sun.star.form.component.ComboBox") Then
+        sTipo = "ComboBox"
+    ElseIf oModel.supportsService("com.sun.star.form.component.ListBox") Then
+        sTipo = "ListBox"
+    ElseIf oModel.supportsService("com.sun.star.form.component.CheckBox") Then
+        sTipo = "CheckBox"
+    ElseIf oModel.supportsService("com.sun.star.form.component.DateField") Then
+        sTipo = "Campo fecha"
+    ElseIf oModel.supportsService("com.sun.star.form.component.TimeField") Then
+        sTipo = "Campo hora"
+    ElseIf oModel.supportsService("com.sun.star.form.component.NumericField") Then
+        sTipo = "Campo numérico"
+    ElseIf oModel.supportsService("com.sun.star.form.component.CommandButton") Then
+        sTipo = "Botón"
+    ElseIf oModel.supportsService("com.sun.star.form.component.RadioButton") Then
+        sTipo = "RadioButton"
+    ElseIf oModel.supportsService("com.sun.star.form.component.FormattedField") Then
+        sTipo = "Campo formateado"
+    ElseIf oModel.supportsService("com.sun.star.form.component.GridControl") Then
+        sTipo = "Grid/Tabla"
+    ElseIf oModel.supportsService("com.sun.star.form.component.ImageControl") Then
+        sTipo = "Control imagen"
+    ElseIf oModel.supportsService("com.sun.star.form.component.FileControl") Then
+        sTipo = "Selector archivo"
+    ElseIf oModel.supportsService("com.sun.star.awt.UnoControlFixedTextModel") Then
+        sTipo = "Etiqueta"
+    ElseIf oModel.supportsService("com.sun.star.form.component.GroupBox") Then
+        sTipo = "Grupo"
+    Else
+        ' Intentar obtener el nombre del servicio
+        Dim sServiceName As String
+        sServiceName = ""
+        If Not IsNull(oModel) Then
+            Dim aServices As Variant
+            aServices = oModel.getSupportedServiceNames()
+            If UBound(aServices) &gt;= 0 Then
+                sServiceName = aServices(0)
+                sServiceName = Replace(sServiceName, "com.sun.star.form.component.", "")
+                sServiceName = Replace(sServiceName, "com.sun.star.awt.", "")
+            End If
+        End If
+        sTipo = "Otro (" &amp; sServiceName &amp; ")"
+    End If
+    
+    On Error GoTo 0
+    
+    ObtenerTipoControlDetallado = sTipo
+End Function
+
+Function DocumentarSubformularios(oDrawPage As Object) As String
+    Dim sResult As String
+    Dim oForms As Object
+    Dim i As Integer
+    Dim oSubForm As Object
+    Dim sNombreSubForm As String
+    Dim sTablaSubForm As String
+    Dim aMasterFields As Variant
+    Dim aDetailFields As Variant
+    Dim j As Integer
+    
+    sResult = ""
+    oForms = oDrawPage.getForms()
+    
+    If oForms.getCount() &gt; 1 Then
+        sResult = "### Subformularios" &amp; Chr(10) &amp; Chr(10)
+        
+        For i = 1 To oForms.getCount() - 1
+            oSubForm = oForms.getByIndex(i)
+            
+            On Error Resume Next
+            sNombreSubForm = oSubForm.Name
+            sTablaSubForm = oSubForm.Command
+            On Error GoTo 0
+            
+            sResult = sResult &amp; "**" &amp; sNombreSubForm &amp; "**" &amp; Chr(10)
+            sResult = sResult &amp; "- Tabla/Consulta: `" &amp; sTablaSubForm &amp; "`" &amp; Chr(10)
+            
+            ' Relación maestro-detalle
+            On Error Resume Next
+            aMasterFields = oSubForm.MasterFields
+            aDetailFields = oSubForm.DetailFields
+            
+            If IsArray(aMasterFields) And IsArray(aDetailFields) Then
+                If UBound(aMasterFields) &gt;= 0 Then
+                    sResult = sResult &amp; "- Relación: "
+                    For j = 0 To UBound(aMasterFields)
+                        If j &gt; 0 Then sResult = sResult &amp; ", "
+                        sResult = sResult &amp; "`" &amp; aMasterFields(j) &amp; "` → `" &amp; aDetailFields(j) &amp; "`"
+                    Next j
+                    sResult = sResult &amp; Chr(10)
+                End If
+            End If
+            On Error GoTo 0
+            
+            sResult = sResult &amp; Chr(10)
+        Next i
+    End If
+    
+    DocumentarSubformularios = sResult
+End Function
+
+Function DocumentarEventosMejorado(oForm As Object, oDrawPage As Object) As String
+    Dim sResult As String
+    Dim bHayEventos As Boolean
+    Dim oFormEvents As Object
+    Dim eventNames As Variant
+    Dim i As Integer
+    Dim oEvent As Object
+    Dim sEventType As String
+    Dim sScript As String
+    Dim sNombreEvento As String
+    Dim j As Integer
+    Dim bPrimeraVez As Boolean
+    Dim oShape As Object
+    Dim oModel As Object
+    Dim oCtrlEvents As Object
+    Dim ctrlEventNames As Variant
+    Dim k As Integer
+    Dim oCtrlEvent As Object
+    Dim sCtrlScript As String
+    Dim sCtrlName As String
+    Dim sCtrlEventName As String
+    
+    sResult = "### Eventos y macros" &amp; Chr(10) &amp; Chr(10)
+    bHayEventos = False
+    
+    ' Eventos del formulario
+    On Error Resume Next
+    oFormEvents = oForm.Events
+    
+    If Not IsNull(oFormEvents) Then
+        eventNames = oFormEvents.getElementNames()
+        
+        If IsArray(eventNames) Then
+            If UBound(eventNames) &gt;= 0 Then
+                For i = 0 To UBound(eventNames)
+                    oEvent = oFormEvents.getByName(eventNames(i))
+                    
+                    If Not IsNull(oEvent) Then
+                        sEventType = oEvent.EventType
+                        sScript = ""
+                        
+                        If sEventType = "Script" Or sEventType = "StarBasic" Then
+                            sScript = oEvent.Script
+                            If sScript = "" Then sScript = oEvent.ScriptCode
+                        End If
+                        
+                        If sScript &lt;&gt; "" Then
+                            If Not bHayEventos Then
+                                sResult = sResult &amp; "**Eventos del formulario:**" &amp; Chr(10) &amp; Chr(10)
+                                bHayEventos = True
+                            End If
+                            
+                            sNombreEvento = FormatearNombreEvento(eventNames(i))
+                            sResult = sResult &amp; "- **" &amp; sNombreEvento &amp; "**: `" &amp; sScript &amp; "`" &amp; Chr(10)
+                        End If
+                    End If
+                Next i
+                
+                If bHayEventos Then sResult = sResult &amp; Chr(10)
+            End If
+        End If
+    End If
+    On Error GoTo 0
+    
+    ' Eventos de controles
+    bPrimeraVez = True
+    
+    For j = 0 To oDrawPage.getCount() - 1
+        On Error Resume Next
+        oShape = oDrawPage.getByIndex(j)
+        
+        If oShape.supportsService("com.sun.star.drawing.ControlShape") Then
+            oModel = oShape.getControl()
+            oCtrlEvents = oModel.Events
+            
+            If Not IsNull(oCtrlEvents) Then
+                ctrlEventNames = oCtrlEvents.getElementNames()
+                
+                If IsArray(ctrlEventNames) Then
+                    For k = 0 To UBound(ctrlEventNames)
+                        oCtrlEvent = oCtrlEvents.getByName(ctrlEventNames(k))
+                        
+                        If Not IsNull(oCtrlEvent) Then
+                            sCtrlScript = oCtrlEvent.Script
+                            If sCtrlScript = "" Then sCtrlScript = oCtrlEvent.ScriptCode
+                            
+                            If sCtrlScript &lt;&gt; "" Then
+                                If bPrimeraVez Then
+                                    sResult = sResult &amp; "**Eventos de controles:**" &amp; Chr(10) &amp; Chr(10)
+                                    bPrimeraVez = False
+                                    bHayEventos = True
+                                End If
+                                
+                                sCtrlName = oModel.Name
+                                sCtrlEventName = FormatearNombreEvento(ctrlEventNames(k))
+                                
+                                sResult = sResult &amp; "- **" &amp; sCtrlName &amp; "." &amp; sCtrlEventName &amp; "**: `" &amp; sCtrlScript &amp; "`" &amp; Chr(10)
+                            End If
+                        End If
+                    Next k
+                End If
+            End If
+        End If
+        On Error GoTo 0
+    Next j
+    
+    If Not bHayEventos Then
+        sResult = sResult &amp; "*No hay eventos ni macros asociadas.*" &amp; Chr(10)
+    End If
+    
+    sResult = sResult &amp; Chr(10)
+    
+    DocumentarEventosMejorado = sResult
+End Function
+
+Function FormatearNombreEvento(sEvento As String) As String
+    ' Convertir nombres técnicos a más legibles
+    sEvento = Replace(sEvento, "approveAction", "Al aprobar acción")
+    sEvento = Replace(sEvento, "actionPerformed", "Al hacer clic")
+    sEvento = Replace(sEvento, "itemStateChanged", "Al cambiar selección")
+    sEvento = Replace(sEvento, "textChanged", "Al cambiar texto")
+    sEvento = Replace(sEvento, "focusGained", "Al obtener foco")
+    sEvento = Replace(sEvento, "focusLost", "Al perder foco")
+    sEvento = Replace(sEvento, "mouseEntered", "Al entrar ratón")
+    sEvento = Replace(sEvento, "mouseExited", "Al salir ratón")
+    sEvento = Replace(sEvento, "approveUpdate", "Al aprobar actualización")
+    sEvento = Replace(sEvento, "approveReset", "Al aprobar reset")
+    
+    FormatearNombreEvento = sEvento
+End Function
+
+Function EscaparMarkdown(sTexto As String) As String
+    sTexto = Replace(sTexto, "|", "\|")
+    sTexto = Replace(sTexto, "[", "\[")
+    sTexto = Replace(sTexto, "]", "\]")
+    EscaparMarkdown = sTexto
+End Function
+
+Function ObtenerRutaGuardado() As String
+    Dim oDoc As Object
+    Dim sRutaODB As String
+    Dim iPosicion As Integer
+    Dim i As Integer
+    Dim sRutaDirectorio As String
+    Dim sNombreODB As String
+    
+    On Error Resume Next
+    
+    ' Obtener el documento actual y su ruta
+    oDoc = ThisDatabaseDocument
+    sRutaODB = ConvertFromURL(oDoc.getURL())
+    
+    ' Verificar que no esté vacía
+    If sRutaODB = "" Then
+        ObtenerRutaGuardado = ""
+        Exit Function
+    End If
+    
+    ' Buscar manualmente la última barra invertida
+    iPosicion = 0
+    For i = Len(sRutaODB) To 1 Step -1
+        If Mid(sRutaODB, i, 1) = "\" Then
+            iPosicion = i
+            Exit For
+        End If
+    Next i
+    
+    ' Si no encontró \, buscar /
+    If iPosicion = 0 Then
+        For i = Len(sRutaODB) To 1 Step -1
+            If Mid(sRutaODB, i, 1) = "/" Then
+                iPosicion = i
+                Exit For
+            End If
+        Next i
+    End If
+    
+    ' Extraer directorio y nombre
+    If iPosicion &gt; 0 Then
+        sRutaDirectorio = Left(sRutaODB, iPosicion)
+        sNombreODB = Mid(sRutaODB, iPosicion + 1)
+        
+        ' Quitar extensión .odb
+        If Right(sNombreODB, 4) = ".odb" Then
+            sNombreODB = Left(sNombreODB, Len(sNombreODB) - 4)
+        End If
+        
+        ObtenerRutaGuardado = sRutaDirectorio &amp; "formularios_" &amp; sNombreODB &amp; ".md"
+    Else
+        ObtenerRutaGuardado = ""
+    End If
+    
+    On Error GoTo 0
+End Function
+
+Function GetPathSettings() As Object
+    GetPathSettings = CreateUnoService("com.sun.star.util.PathSettings")
+End Function
+
+Sub GuardarArchivoTexto(sRuta As String, sContenido As String)
+    Dim iFileNumber As Integer
+    
+    iFileNumber = FreeFile
+    Open sRuta For Output As #iFileNumber
+    Print #iFileNumber, sContenido
+    Close #iFileNumber
+End Sub
+</codigo>
+    </modulo>
+  </biblioteca>
+  <biblioteca nombre="Standard" cantidad-modulos="0" />
+  <biblioteca nombre="TramitarLib" cantidad-modulos="1">
+    <modulo nombre="FormularioExpedientes" path-original="Basic/TramitarLib/FormularioExpedientes.xml" name="FormularioExpedientes" language="StarBasic" moduleType="normal">
+      <codigo>
+REM  *****  BASIC  *****
+
+Sub Main
+
+End Sub
+
+Sub NuevoExpedienteIncrementado(oEvent As Object)
+    Dim oForm As Object, oConn As Object, oStatement As Object
+    Dim oResult As Object
+    Dim nMaxNumeroAT As Long, nNuevoNumeroAT As Long
+    Dim oControl_NumeroAT As Object
+    
+    ' Obtener formulario (asignado al botón dentro del formulario de Expedientes)
+    oForm = oEvent.Source.Model.Parent
+    ' Acceso a la conexión de base de datos del formulario
+    oConn = oForm.ActiveConnection
+    
+    ' Crear consulta SQL para obtener el mayor NumeroAT
+    oStatement = oConn.createStatement()
+    oResult = oStatement.executeQuery("SELECT MAX(NUMERO_AT) FROM T.EXPEDIENTES")
+    nMaxNumeroAT = 0 
+    If oResult.next() Then
+        nMaxNumeroAT = oResult.getLong(1)
+    End If
+    nNuevoNumeroAT = nMaxNumeroAT + 1
+    
+    ' Cerrar statement y result
+    oResult.close()
+    oStatement.close()
+    
+    ' Insertar en el recordset del formulario
+    oForm.moveToInsertRow()
+    oForm.updateLong(oForm.findColumn("NUMERO_AT"), nNuevoNumeroAT)
+    ' No hacemos insertRow() aún - dejamos que el usuario complete los otros campos
+    
+    ' Enfocar el campo RESPONSABLE_ID para que el usuario lo complete
+    ' Dim oControl_Responsable As Object
+    ' oControl_Responsable = oForm.getByName("RESPONSABLE_ID")
+    ' oControl_Responsable.grabFocus()
+    
+End Sub
+
+
+Sub GuardarYCerrarFormulario(oEvent As Object)
+    Dim oFrame As Object
+    Dim dispatcher As Object
+    Dim args() As New com.sun.star.beans.PropertyValue
+    
+    oFrame = ThisComponent.CurrentController.Frame
+    dispatcher = createUnoService("com.sun.star.frame.DispatchHelper")
+    
+    ' Ejecutar el comando interno para guardar el registro (equivale a pulsar "Guardar registro")
+    dispatcher.executeDispatch(oFrame, ".uno:RecSave", "", 0, args())
+    
+    ' Cerrar el formulario
+    oFrame.close(True)
+End Sub
+</codigo>
+    </modulo>
+  </biblioteca>
+</modulos-basic-consolidados>
