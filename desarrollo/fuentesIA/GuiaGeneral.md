@@ -220,14 +220,182 @@ En nuestro caso queremos que la lógica de negocio no sea rígida, restringiendo
 
 Datos estructurales vs datos
 
-### Tipos de expedientes
+### Lógica de Negocio - Enfoque basado en Motor de Reglas
+
+#### Principio fundamental
+
+La lógica de negocio de la aplicación **NO se implementa mediante código duro** (funciones, procedimientos almacenados, triggers con lógica específica). En su lugar, se basa en un **motor de reglas genérico** alimentado por tablas de configuración.
+
+#### Características del sistema de reglas
+
+1.  Las reglas viven en tablas, no en código
+
+- - Toda la lógica de validación, restricción y flujo se almacena como **datos** en tablas específicas
+  - Modificar el comportamiento del sistema implica modificar registros en estas tablas, no recompilar código
+  - Las reglas son versionables, auditables y reversibles como cualquier otro dato
+
+1.  Las reglas leen valores de tablas estructurales
+
+- - El motor de reglas consulta dinámicamente los datos de las tablas de estructura básica (FASES, SOLICITUDES, EXPEDIENTES, PROYECTOS, etc.)
+  - Las reglas evalúan condiciones basándose en:
+
+<!-- -->
+
+- - - Valores de campos específicos (ej: EXITO de una fase)
+    - Existencia o ausencia de registros relacionados
+    - Relaciones entre entidades
+    - Contexto del expediente (tipo, instrumento ambiental, etc.)
+
+1.  Las reglas producen acciones
+
+> Las reglas pueden generar diferentes tipos de acciones:
+
+- - **Bloquear**: Impedir al usuario realizar una acción (ej: crear una fase fuera de secuencia)
+  - **Sugerir**: Mostrar advertencias o recomendaciones sin impedir la acción
+  - **Obligar**: Forzar la creación/modificación de registros según condiciones
+  - **Calcular**: Derivar valores automáticamente basándose en otros datos
+  - **Validar**: Verificar la consistencia de los datos antes de confirmar cambios
+
+1.  4\. Las reglas son editables sin tocar código
+
+- - Los usuarios con permisos adecuados pueden modificar las reglas de negocio
+  - No se requiere intervención de programadores para ajustar el comportamiento del sistema
+  - Los cambios en las reglas tienen efecto inmediato
+  - Esto permite adaptación ágil a cambios normativos o procedimentales
+
+#### Implicaciones para el diseño actual
+
+Fase de desarrollo/despliegue (Fases 1 y 2)
+
+- **Sin restricciones activas**: El usuario tiene libertad total
+- **Indicadores visuales**: La interfaz muestra advertencias informativas (no bloqueantes) sobre datos incompletos o inconsistentes
+- **Educación progresiva**: Los usuarios se familiarizan con el "debería ser" antes de que se active el "debe ser"
+
+Fase de producción con lógica activada (fases 3 y 4)
+
+- **Restricciones automáticas**: El motor de reglas evalúa y aplica las reglas definidas
+- **Flujos guiados**: El sistema sugiere o impone el siguiente paso según el contexto
+- **Validación en tiempo real**: Se previenen inconsistencias antes de que se confirmen
+- **Flexibilidad mantenida**: Ajustar una regla no requiere nueva versión de software
+
+#### Principio de no redundancia
+
+Los datos estructurales (como EXITO en FASES) **no duplican información** que pueda deducirse de otros datos. El motor de reglas es responsable de:
+
+- Interpretar los datos básicos
+- Aplicar las reglas configuradas
+- Producir las acciones correspondientes
+
+Los campos estructurales contienen **únicamente información primaria**, nunca derivada.
+
+### El expediente y sus tipos
 
 Los tipos de expedientes se definen en la tabla maestra TIPOS_EXPEDIENTES. Como se puede apreciar está asociado al tipo de titular de la instalación y tipo de uso de la misma. Digamos que es una clasificación de las distintas particularidades que tiene la legislación respecto a la tramitación en cada caso. El tipo de expediente define la lógica de la tramitación pues será una de las variables a tener en cuenta de cara a definir las restricciones o prohibiciones de la lógica de negocio.
 
-### Tipos de solicitudes
+El número de expediente NUMERO_AT es el **nexo que une todo** lo relativo a ese expediente.
 
-Los tipos de solicitudes están claramente definidas en la legislación y definen el resultado buscado por el solicitante. En la mayoría de los casos se obtiene una resolución. En otros se obtiene una toma de razón o simplemente una copia de documentación con un oficio. En cualquier caso siempre se pide un resultado. Si no se obtiene se produce una resolución de denegación, inadmisión, caducidad, aceptación renuncia, etc. para finalizar la solicitud.
+El responsable ID es la persona que es responsable de ese expediente por completo y en la estructura empresarial es la única persona que está “permitida” (en el sentido que el sistema no impide a otro usuario actuar sobre ese expediente) a actuar sobre es expedientes y todas las tablas y datos asociadas.
 
-### Tipos de fases
+El campo HEREDADO indica que ese expediente viene heredado del sistema de tramitación anterior. Esto indica que solo tendrá como datos en tablas lo que ya existe en el sistema anterior de control, pero no tendrá todas las tablas normales de un expediente moderno. De esta forma si este campo es SI, la lógica de negocio y el usuario están informados de porqué no hay datos en muchas tablas.
+
+### La solicitud y sus tipos
+
+Los tipos de solicitudes TIPO_SOLICITUD_ID están claramente definidas en la legislación y definen el resultado buscado por el solicitante. En cualquier caso siempre se pide un resultado de la misma desde el solicitante/peticionario/titular. Si no se obtiene el resultado esperado se produce una resolución de denegación, inadmisión, caducidad, aceptación renuncia, etc. para finalizar la solicitud. Una solicitud siempre (si no fuese así deberíamos plantearnos sacarla fuera de estos tipos de solicitudes) termina con una fase resolución. La situación en la que se encuentra una solicitud depende de lo que hayan concluido sus fases. Con macros se puede crear un “estado” como conjunción de los distintos estados de cada fase/trámite/tarea.
+
+El campo FECHA es la fecha de la solicitud.
+
+El campo PROYECTO_ID es la referencia al proyecto principal que se acompaña en la primera solicitud.
+
+Hay tipos de solicitudes que se refieren a otras solicitudes que que hacen aquella se finalice. Estas son DESISTIMIENTO y RENUNCIA. EL parámetro que las une es el campo SOLICITUD_AFECTADA_ID que es NULL por defecto para cualquier resolución, pero con la lógica de negocio será obligatorio dar un valor eligiendo la solicitud que se renuncia o desiste.
+
+### La fase y sus tipos
 
 Hay diferentes tipos de fases, muchas de ellas son comunes a los distintos tipos de solicitudes. Los tipos de fases se definen en la tabla TIPOS_FASES. La característica principal de una fase es que tiene fechas de inicio y fin y que tiene un resultado de la misma. Una fase es un conjunto de trámites para obtener un requisito para alcanzar el objetivo de la solicitud. Por ejemplo obtención del pronunciamiento ambiental, de los condicionantes de los organismos, de la exposición del proyecto en información pública o de un informe favorable de un organismo externo.
+
+Resumen de conceptos y flujo de trabajo con el diseño simplificado de fases.
+
+Conceptos clave:
+
+**Tabla FASES**: cada fase del expediente tiene campos clave:
+
+- ID de fase, ID de solicitud, tipo de fase, fecha de inicio, fecha de fin, observaciones.
+- Fecha de fin se define como la última fecha de finalización de todos los trámites asociados.
+- EXITO: Es el valor booleano del resultado exitoso de la fase. Si es SI, la fase ha concluido exitosamente respecto a su tipo. Por ejemplo si la fase es INFORME MINISTERIO entonces se ha obtenido el informe favorable. Ese informe estará en el trámite/tarea correspondiente.
+- DOCUMENTO_RESULTADO_ID: posible vínculo al documento oficial generado. Posiblemente desaparezca.
+
+**Rellenado y flujo**:
+
+- Al cerrar el último trámite asociado, se puede automatizar la fijación de la fecha fin de la fase.
+- El éxito o no de la fase debe ser registrado manualmente por el usuario autorizado una vez analizada la documentación oficial correspondiente.
+- Si EXITO es nulo, la fase está en curso o pendiente de cierre administrativo.
+- Al tener el valor de éxito relleno (SI/NO) la fase se considera concluida y se puede permitir la creación o activación de fases sucesivas según reglas de negocio.
+
+**Reglas de negocio y validación**:
+
+- La fase sólo puede cerrarse tras completarse todos los trámites.
+- La elección del resultado condiciona el flujo posterior y la posibilidad de nuevas fases.
+- Campos automatizados (fecha fin) y campos manuales (éxito) coexistente para flexibilidad y control.
+- Este diseño permite una gestión clara de la tramitación administrativa, manteniendo integridad, auditabilidad y control sobre el proceso mediante restricciones racionales y roles de usuario.
+
+### El trámite y sus tipos
+
+Los trámites son la capa de nuestro sistema con mayor variabilidad. Esto hace que necesitemos una estructura flexible pero coherente. La solución adoptada es la siguiente:
+
+**Tablas necesarias**: para conseguir el objetivo
+
+- Una tabla general de TIPOS_TRAMITES donde se listen todos los tipos y se incluya el nombre de la tabla asociada al tipo.
+- Una tabla TRAMITES general que contenga los datos comunes a todos los tipos de trámites. Contiene instancias.
+- Una tabla TRAMITES_XXXXXX por cada tipo con los campos específicos de ese tipo de trámite. Contiene instancias.
+
+**Implicaciones de la solución adoptada**: consecuencias de la solución
+
+- Hay una relación uno a uno entre el nombre de la tabla específica para un tipo de trámite y el tipo en si en la tabla TIPOS_TRAMITES. Si esa relación se rompe se emitiría un error.
+- Las instancias en TRAMITES tienen que tener una instancia en la tabla de trámite especializado, correspondiente al valor del tipo de trámite.
+- Existe el riesgo de instancias de trámites especializados huérfanos sin entrada en TRAMITES e instancias en TRAMITES sin su hijo correspondiente.
+
+Estos riesgos se deben gobernar con dependencias en cascada y macros de comprobación. Esto no es una regla de la lógica de negocio, es un asunto de integridad referencial.
+
+**Ventajas**: lo que nos ofrece****
+
+- Integridad de datos fuerte
+- Consultas SQL estándar
+- Fácil validar datos específicos
+
+**Desventajas**: lo que nos complica****
+
+- Más tablas que mantener
+- Requiere modificar BD al añadir nuevos tipos
+
+**Estructura propuesta**: por confirmar
+
+TIPOS_TRAMITES (tabla maestra)
+
+ - ID
+
+ - CODIGO
+
+ - NOMBRE
+
+ - DESCRIPCION
+
+ - TABLA_EXTENSION (nombre de la tabla especializada, ej: "TRAMITES_REQUERIMIENTO")
+
+TRAMITES (tabla base)
+
+ - ID
+
+ - FASE_ID (FK → FASES)
+
+ - TIPO_TRAMITE_ID (FK → TIPOS_TRAMITES)
+
+ - FECHA_INICIO
+
+ - FECHA_FIN
+
+ - OBSERVACIONES
+
+TRAMITES\_\[TIPO_ESPECIFICO\] (una tabla por cada tipo)
+
+ - TRAMITE_ID (PK + FK → TRAMITES, relación 1:1)
+
+ - \[campos específicos del tipo de trámite\]
