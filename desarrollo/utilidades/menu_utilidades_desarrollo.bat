@@ -9,7 +9,7 @@ echo    MENÚ DE UTILIDADES DE DESARROLLO - BDDATLIBRE
 echo ═══════════════════════════════════════════════════════════════
 echo.
 echo  [1] Convertir ODT a Markdown
-echo  [2] Limpiar script SQL (bdat.script → bdat.script.txt)
+echo  [2] Genera bdat.script.txt (requiere SCRIPT 'W:/BDDATLIBRE/desarrollo/fuentesIA/bdat.script.temp';)
 echo  [3] Extraer formularios a JSON
 echo  [4] Consolidar módulos BASIC
 echo  [5] Extraer datos maestros
