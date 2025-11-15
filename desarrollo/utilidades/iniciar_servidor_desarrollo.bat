@@ -3,7 +3,7 @@ REM ============================================
 REM Servidor HSQLDB - BASE DE DATOS DESARROLLO
 REM ============================================
 
-set HSQL_PATH=W:\BDDATLIBRE\hslqdb
+set HSQL_PATH=W:\BDDATLIBRE\hsqldb
 set DB_DESARROLLO=W:\BDDATLIBRE\desarrollo\bdat
 
 echo ========================================
