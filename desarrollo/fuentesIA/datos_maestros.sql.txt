@@ -18,7 +18,7 @@ INSERT INTO TIPOS_EXPEDIENTES VALUES(7,'Otros','Otros tipos de expedientes')
 
 -- Tabla: TIPOS_FASES
 -- --------------------------------------------------
-INSERT INTO TIPOS_FASES VALUES(0,'SOLICITUD_INICIADA','Solicitud Iniciada')
+INSERT INTO TIPOS_FASES VALUES(0,'ANALISIS_SOLICITUD','An\u00e1lisis de la solicitud, documental y cumplimiento reglamentario.')
 INSERT INTO TIPOS_FASES VALUES(1,'CONSULTA_MINISTERIO','Consulta Ministerio. Exclusivo instalaciones de transporte')
 INSERT INTO TIPOS_FASES VALUES(2,'COMPATIBILIDAD_AMBIENTAL','Compatibilidad Ambiental. Exclusivo para instalaciones con AAU o AAUS')
 INSERT INTO TIPOS_FASES VALUES(3,'ADMISION_TRAMITE','Admisi\u00f3n a Tr\u00e1mite. Solo para instalaciones de generaci\u00f3n renovable')
@@ -27,10 +27,6 @@ INSERT INTO TIPOS_FASES VALUES(5,'INFORMACION_PUBLICA','Informaci\u00f3n P\u00fa
 INSERT INTO TIPOS_FASES VALUES(6,'FIGURA_AMBIENTAL_EXTERNA','Figura Ambiental Externa. Modificaci\u00f3n de instalaciones que ya disponen de AAU/AAUS o instalaciones nuevas o modificaciones que tengan CA')
 INSERT INTO TIPOS_FASES VALUES(7,'AAU_AAUS','AAU/AAUs Integrada. Instalaciones nuevas sometidas a AAU/AAUS cuya tramitaci\u00f3n se integra en la tramitaci\u00f3n sustativa')
 INSERT INTO TIPOS_FASES VALUES(8,'RESOLUCION','Resoluci\u00f3n. Normalmente favorable o condicionada')
-INSERT INTO TIPOS_FASES VALUES(9,'RESOLUCION_DESISTIMIENTO','Resoluci\u00f3n Desistimiento. Puede ser expresa o consecuencia de no responder a mejora de la solicitud')
-INSERT INTO TIPOS_FASES VALUES(10,'RESOLUCION_INADMISION','Resoluci\u00f3n Inadmisi\u00f3n. No admisi\u00f3n a tr\u00e1mite para instalaciones de generaci\u00f3n renovable')
-INSERT INTO TIPOS_FASES VALUES(11,'RESOLUCION_DESFAVORABLE','Resoluci\u00f3n Desfavorable. Por informe negativo externo (Ministerio, otros organismos)')
-INSERT INTO TIPOS_FASES VALUES(12,'RESOLUCION_ARCHIVO','Resoluci\u00f3n Archivo')
 
 -- Tabla: TIPOS_IA
 -- --------------------------------------------------
