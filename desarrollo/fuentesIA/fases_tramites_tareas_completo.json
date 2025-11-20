@@ -1,0 +1,163 @@
+{
+  "ANALISIS_SOLICITUD": {
+    "tramites": [
+      {
+        "nombre": "COMPROBACION_DOCUMENTAL",
+        "tareas": [
+          "CHECKLIST(S)"
+        ]
+      },
+      {
+        "nombre": "MEJORA SOLICITUD",
+        "tareas": [
+          "REDACTAR",
+          "FIRMA",
+          "NOTIFICAR",
+          "ESPERAR SUBSANAR"
+        ]
+      },
+      {
+        "nombre": "COMPROBACION_SUBSANACION",
+        "tareas": [
+          "CHECKLIST(S)"
+        ]
+      }
+
+    ]
+  },
+  "CONSULTA MINISTERIO": {
+    "tramites": [
+      {
+        "nombre": "SOLICITUD INFORME MINISTERIO",
+        "tareas": [
+          "REDACTAR",
+          "FIRMA",
+          "NOTIFICAR",
+          "ESPERAR INFORME"
+        ]
+      }
+    ]
+  },
+  "COMPATIBILIDAD AMBIENTAL": {
+    "tramites": [
+      {
+        "nombre": "SOLICITUD COMPATIBILIDAD AMBIENTAL",
+        "tareas": [
+          "REDACTAR",
+          "FIRMA",
+          "NOTIFICAR",
+          "ESPERAR INFORME VINCULANTE"
+        ]
+      },
+      {
+        "nombre": "AUDIENCIA DE MA",
+        "tareas": [
+          "REDACTAR (ALEGACIÓN)",
+          "FIRMA",
+          "NOTIFICAR",
+          "ESPERAR INFORME VINCULANTE"
+        ]
+      }
+    ]
+  },
+  "ADMISIÓN A TRÁMITE": {
+    "tramites": [
+      {
+        "nombre": "ANÁLISIS ADMISIÓN A TRÁMITE",
+        "tareas": [
+           "CHECKLIST(S)"
+        ]
+      },
+      {
+        "nombre": "REMISIÓN (IN)ADMISIÓN A TRÁMITE)",
+        "tareas": [
+          "REDACTAR",
+          "FIRMA",
+          "NOTIFICAR"
+        ]
+      }
+    ]
+  },
+  "IP": {
+    "tramites": [
+      {
+        "nombre": "BOLETIN(ES) TABLON(ES) PERIÓDICO(S) TRANSPARENCIA",
+        "tareas": [
+          "REDACTAR",
+          "FIRMA",
+          "PUBLICAR",
+          "ESPERAR PLAZOS"
+        ]
+      },
+      {
+        "nombre": "ALEGACIONES",
+        "tareas": [
+          "ANÁLISIS",
+          "REDACTAR",
+          "FIRMA",
+          "NOTIFICAR",
+          "ESPERAR RESPUESTA"
+        ]
+      }
+    ]
+  },
+  "CONSULTAS": {
+    "tramites": [
+      {
+        "nombre": "SEPARATA(S) POR ORGANISMO(S) Y TRASLADO(S)",
+        "tareas": [
+          "ANALISIS"
+          "REDACTAR",
+          "FIRMA",
+          "NOTIFICAR",
+          "ESPERAR RESPUESTA"
+        ]
+      }
+    ]
+  },
+  "AAU(S)": {
+    "tramites": [
+      {
+        "nombre": "REMISIÓN RESULTADO IP Y CONSULTAS A MA",
+        "tareas": [
+          "REDACTAR",
+          "FIRMA",
+          "NOTIFICAR",
+          "ESPERA DICTAMEN AMBIENTAL",
+          "ESPERA INFORME AMBIENTAL"
+        ]
+      }
+    ]
+  },
+  "INSTRUMENTO AMBINTAL NO INTEGRADO (CA,AAU NO INTEGRADA O AAI)": {
+    "tramites": [
+      {
+        "nombre": "RECEPCIÓN INSTRUMENTO AMBIENTAL",
+        "tareas": [
+          "ESPERA INSTRUMENTO AMBIENTAL"
+        ]
+      }
+
+    ]
+  },
+  "RESOLUCIÓN": {
+    "tramites": [
+      {
+        "nombre": "NOTIFICACIÓN",
+        "tareas": [
+          "REDACTAR",
+          "FIRMA",
+          "NOTIFICAR"
+        ]
+      },
+      {
+        "nombre": "PUBLICACIÓN",
+        "tareas": [
+          "REDACTAR",
+          "FIRMA",
+          "PUBLICAR"
+        ]
+      }
+    ]
+  }
+}
