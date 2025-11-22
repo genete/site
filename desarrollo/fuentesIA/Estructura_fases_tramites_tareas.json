@@ -1,44 +1,78 @@
 {
   "metadata": {
-    "version": "1.0",
+    "version": "2.0",
     "descripcion": "Estructura jerárquica de fases, trámites y tareas para expedientes de AT",
     "principio": "Minimalismo estructural - la semántica vive en los TIPOS",
     "nota": "Las tareas listadas son indicativas. La secuencia real se definirá en las reglas de negocio"
   },
   "FASES": [
     {
-      "codigo": "ANALISIS_SOLICITUD",
-      "nombre": "Análisis de Solicitud",
-      "descripcion": "Verificación inicial de requisitos de admisibilidad y completitud documental",
+      "codigo": "ADMISIBILIDAD",
+      "nombre": "Admisibilidad de la Solicitud",
+      "descripcion": "Verificación de legitimación, capacidad y requisitos formales del solicitante",
       "tramites": [
         {
-          "codigo": "COMPROBACION_DOCUMENTAL_INICIAL",
-          "nombre": "Comprobación Documental Inicial",
-          "descripcion": "Revisión de la documentación presentada con la solicitud",
+          "codigo": "COMPROBACION_ADMISIBILIDAD",
+          "nombre": "Comprobación de Admisibilidad",
+          "descripcion": "Análisis de capacidad legal, técnica, económica y pago de tasas",
           "tareas": [
-            "CHECKLIST_DOCUMENTAL",
-            "INFORME_DEFICIENCIAS"
+            "ANALISIS",
+            "INFORME"
           ]
         },
         {
-          "codigo": "REQUERIMIENTO_MEJORA_SOLICITUD",
-          "nombre": "Requerimiento de Mejora/Subsanación",
-          "descripcion": "Solicitud al interesado de subsanación de deficiencias",
+          "codigo": "REQUERIMIENTO_SUBSANACION",
+          "nombre": "Requerimiento de Subsanación",
+          "descripcion": "Solicitud de subsanación de defectos formales subsanables",
           "tareas": [
-            "REDACTAR_REQUERIMIENTO",
-            "REVISAR",
-            "FIRMA",
-            "NOTIFICAR_SOLICITANTE",
-            "ESPERAR_SUBSANACION"
+            "REDACTAR",
+            "FIRMAR",
+            "NOTIFICAR",
+            "ESPERAR_PLAZO"
+          ]
+        }
+      ]
+    },
+    {
+      "codigo": "INADMISION",
+      "nombre": "Inadmisión",
+      "descripcion": "Inadmisión por defectos no subsanados o no subsanables. Finaliza la solicitud",
+      "tramites": [
+        {
+          "codigo": "RESOLUCION",
+          "nombre": "Resolución de Inadmisión",
+          "descripcion": "Resolución denegatoria por inadmisión",
+          "tareas": [
+            "REDACTAR",
+            "FIRMAR",
+            "NOTIFICAR"
+          ]
+        }
+      ]
+    },
+    {
+      "codigo": "ANALISIS_TECNICO",
+      "nombre": "Análisis Técnico",
+      "descripcion": "Verificación de adecuación reglamentaria y completitud documental del proyecto y demás documentación técnica",
+      "tramites": [
+        {
+          "codigo": "COMPROBACION_DOCUMENTAL",
+          "nombre": "Comprobación Documental",
+          "descripcion": "Análisis de documentación técnica",
+          "tareas": [
+            "ANALISIS",
+            "INFORME"
           ]
         },
         {
-          "codigo": "COMPROBACION_SUBSANACION",
-          "nombre": "Comprobación de Subsanación",
-          "descripcion": "Verificación de que se han subsanado las deficiencias",
+          "codigo": "REQUERIMIENTO_MEJORA",
+          "nombre": "Requerimiento de Mejora/Complemento",
+          "descripcion": "Solicitud de mejora o complemento de documentación técnica",
           "tareas": [
-            "CHECKLIST_SUBSANACION",
-            "INFORME_ADECUACION"
+            "REDACTAR",
+            "FIRMAR",
+            "NOTIFICAR",
+            "ESPERAR_PLAZO"
           ]
         }
       ]
@@ -49,26 +83,25 @@
       "descripcion": "Solicitud de informe preceptivo al Ministerio competente (exclusivo instalaciones de transporte)",
       "tramites": [
         {
-          "codigo": "SOLICITUD_INFORME_MINISTERIO",
-          "nombre": "Solicitud de Informe al Ministerio",
-          "descripcion": "Remisión de documentación al Ministerio y solicitud de informe",
+          "codigo": "SOLICITUD_INFORME",
+          "nombre": "Solicitud de Informe",
+          "descripcion": "Remisión de documentación y solicitud de informe",
           "tareas": [
-            "REDACTAR_OFICIO",
+            "REDACTAR",
             "PREPARAR_DOCUMENTACION",
-            "REVISAR",
-            "FIRMA",
-            "NOTIFICAR_MINISTERIO",
-            "ESPERAR_INFORME"
+            "FIRMAR",
+            "NOTIFICAR",
+            "ESPERAR_PLAZO"
           ]
         },
         {
-          "codigo": "RECEPCION_INFORME_MINISTERIO",
-          "nombre": "Recepción y Registro de Informe",
-          "descripcion": "Registro del informe recibido y traslado interno",
+          "codigo": "RECEPCION_INFORME",
+          "nombre": "Recepción de Informe",
+          "descripcion": "Registro del informe recibido y análisis",
           "tareas": [
-            "REGISTRAR_ENTRADA",
-            "ANALISIS_INFORME",
-            "ARCHIVAR_EXPEDIENTE"
+            "REGISTRAR",
+            "ANALISIS",
+            "ARCHIVAR"
           ]
         }
       ]
@@ -79,38 +112,36 @@
       "descripcion": "Obtención de informe de compatibilidad ambiental (exclusivo para instalaciones con AAU o AAUS previas)",
       "tramites": [
         {
-          "codigo": "SOLICITUD_COMPATIBILIDAD_AMBIENTAL",
-          "nombre": "Solicitud de Informe de Compatibilidad",
-          "descripcion": "Remisión a Medio Ambiente para obtención de compatibilidad ambiental",
+          "codigo": "SOLICITUD_COMPATIBILIDAD",
+          "nombre": "Solicitud de Compatibilidad",
+          "descripcion": "Remisión a Medio Ambiente para obtención de compatibilidad",
           "tareas": [
-            "REDACTAR_OFICIO",
+            "REDACTAR",
             "PREPARAR_DOCUMENTACION",
-            "REVISAR",
-            "FIRMA",
-            "NOTIFICAR_MEDIO_AMBIENTE",
-            "ESPERAR_INFORME_VINCULANTE"
+            "FIRMAR",
+            "NOTIFICAR",
+            "ESPERAR_PLAZO"
           ]
         },
         {
-          "codigo": "AUDIENCIA_MA",
-          "nombre": "Audiencia ante Medio Ambiente",
-          "descripcion": "Audiencia iniciada por Medio Ambiente en el caso de ser incompatible",
+          "codigo": "AUDIENCIA",
+          "nombre": "Audiencia",
+          "descripcion": "Audiencia iniciada por Medio Ambiente en caso de incompatibilidad",
           "tareas": [
-            "REDACTAR_ALEGACION",
-            "REVISAR",
-            "FIRMA",
-            "NOTIFICAR_MEDIO_AMBIENTE",
-            "ESPERAR_INFORME"
+            "REDACTAR",
+            "FIRMAR",
+            "NOTIFICAR",
+            "ESPERAR_PLAZO"
           ]
         },
         {
-          "codigo": "INFORME_VINCULANTE_MA",
-          "nombre": "Recepción informe vinculante de Medio Ambiente",
-          "descripcion": "Recepción de Informe vinculante desde Medio Ambiente tanto si es compatible o incompatible",
+          "codigo": "RECEPCION_INFORME",
+          "nombre": "Recepción de Informe Vinculante",
+          "descripcion": "Recepción de informe vinculante (compatible o incompatible)",
           "tareas": [
-            "GUARDAR_INFORME",
-            "REVISAR_INFORME",
-            "IDENTIFICAR_COMPATIBLE_INCOMPATIBLE"
+            "REGISTRAR",
+            "ANALISIS",
+            "ARCHIVAR"
           ]
         }
       ]
@@ -121,25 +152,27 @@
       "descripcion": "Resolución de admisión a trámite (solo para instalaciones de generación renovable)",
       "tramites": [
         {
-          "codigo": "ANALISIS_ADMISION_TRAMITE",
-          "nombre": "Análisis de Admisión a Trámite",
+          "codigo": "ANALISIS_ADMISION",
+          "nombre": "Análisis de Admisión",
           "descripcion": "Evaluación de requisitos para admisión a trámite",
           "tareas": [
-            "CHECKLIST_ADMISION",
-            "REDACTAR_INFORME_PROPUESTA",
-            "FIRMA",
+            "ANALISIS",
+            "INFORME",
+            "REDACTAR",
+            "FIRMAR",
             "NOTIFICAR"
           ]
         },
         {
-          "codigo": "ALEGACIONES_ADMISION_TRAMITE",
-          "nombre": "Alegaciones a la admisión a trámite",
-          "descripcion": "Presentación de alegaciones o reparos a la recepción del informe de admisión a trámite",
+          "codigo": "ALEGACIONES",
+          "nombre": "Alegaciones",
+          "descripcion": "Presentación de alegaciones al informe de admisión",
           "tareas": [
-            "GUARDAR_ALEGACIONES",
-            "ANALIZAR_ALEGACIONES",
-            "REDACTAR_INFORME_PROPUESTA",
-            "FIRMA",
+            "REGISTRAR",
+            "ANALISIS",
+            "INFORME",
+            "REDACTAR",
+            "FIRMAR",
             "NOTIFICAR"
           ]
         }
@@ -151,42 +184,41 @@
       "descripcion": "Solicitud de informes sectoriales a organismos competentes (conforme RD 1955/2000)",
       "tramites": [
         {
-          "codigo": "SEPARATAS_ORGANISMOS",
+          "codigo": "SEPARATAS",
           "nombre": "Generación y Traslado de Separatas",
           "descripcion": "Creación de separatas específicas por organismo afectado y su traslado",
           "tareas": [
-            "ANALISIS_ORGANISMOS_AFECTADOS",
+            "ANALISIS_ORGANISMOS",
             "GENERAR_SEPARATAS",
-            "REVISAR",
-            "FIRMA",
-            "NOTIFICAR_ORGANISMOS",
-            "ESPERAR_INFORMES"
+            "FIRMAR",
+            "NOTIFICAR",
+            "ESPERAR_PLAZO"
           ]
         },
         {
-          "codigo": "RECEPCION_INFORME_ORGANISMO_TRASLADO_TITULAR",
-          "nombre": "Recepción y Consolidación de Informe de los condicionados o negativa por Organismo",
-          "descripcion": "Registro de informes recibidos y síntesis",
+          "codigo": "RECEPCION_INFORME",
+          "nombre": "Recepción de Informe",
+          "descripcion": "Registro de informe del organismo con condicionados o negativa",
           "tareas": [
-            "REGISTRAR_INFORME",
-            "ANALISIS_CONDICIONANTES",
-            "REDACTAR_OFICIO_REMISON",
-            "FIRMA",
-            "NOTIFICAR_TITULAR",
-            "ESPERAR_REPARO_ACEPTACION"
+            "REGISTRAR",
+            "ANALISIS",
+            "REDACTAR",
+            "FIRMAR",
+            "NOTIFICAR",
+            "ESPERAR_PLAZO"
           ]
         },
         {
-          "codigo": "TRASLADO_REPAROS_TITULAR",
-          "nombre": "Traslado de reparos de Titular a Organismo",
-          "descripcion": "Registro de reparos del titular y remisión a organismo correspondiente",
+          "codigo": "TRASLADO_REPAROS",
+          "nombre": "Traslado de Reparos",
+          "descripcion": "Traslado de reparos del titular al organismo correspondiente",
           "tareas": [
-            "REGISTRAR_REPAROS",
-            "ANALISIS_REPARO",
-            "REDACTER_OFICIO_REMISION",
-            "FIRMA",
-            "NOTIFICAR_ORGANISMO",
-            "ESPERAR_INFORME"
+            "REGISTRAR",
+            "ANALISIS",
+            "REDACTAR",
+            "FIRMAR",
+            "NOTIFICAR",
+            "ESPERAR_PLAZO"
           ]
         }
       ]
@@ -197,40 +229,39 @@
       "descripcion": "Exposición pública del proyecto para alegaciones",
       "tramites": [
         {
-          "codigo": "PUBLICACIONES_OFICIALES",
-          "nombre": "Publicaciones en Medios Oficiales",
-          "descripcion": "Anuncios en boletines, tablones, prensa y portal de transparencia. Considerar o no atomizar",
+          "codigo": "PUBLICACIONES",
+          "nombre": "Publicaciones Oficiales",
+          "descripcion": "Anuncios en boletines, tablones, prensa y portal de transparencia",
           "tareas": [
-            "REDACTAR_ANUNCIOS",
-            "REVISAR",
-            "FIRMA",
-            "ENVIAR_PUBLICACIONES",
-            "ESPERAR_PLAZOS"
+            "REDACTAR",
+            "FIRMAR",
+            "NOTIFICAR",
+            "ESPERAR_PLAZO"
           ]
         },
         {
           "codigo": "RECEPCION_ALEGACION",
-          "nombre": "Recepción de Alegación individual",
-          "descripcion": "Registro de alegaciones que se puedan presentar durante el período de información pública y traslado a titular",
+          "nombre": "Recepción de Alegación",
+          "descripcion": "Registro de alegación individual y traslado a titular",
           "tareas": [
-            "REGISTRAR_ALEGACION",
-            "CLASIFICAR_ALEGANTE",
-            "REDACTAR OFICIO",
-            "FIRMA",
-            "TRALADO_TITULAR",
-            "ESPERAR RESPUESTA TITULAR"
+            "REGISTRAR",
+            "CLASIFICAR",
+            "REDACTAR",
+            "FIRMAR",
+            "NOTIFICAR",
+            "ESPERAR_PLAZO"
           ]
         },
         {
           "codigo": "ANALISIS_ALEGACIONES",
-          "nombre": "Análisis y Respuesta a Alegaciones",
-          "descripcion": "Informe técnico-jurídico sobre alegaciones y propuesta de respuesta a incluir en la Resolución",
+          "nombre": "Análisis de Alegaciones",
+          "descripcion": "Informe técnico-jurídico sobre alegaciones y propuesta de respuesta",
           "tareas": [
-            "ANALISIS_ALEGACION",
-            "REDACTAR_INFORME_INDIVIDUAL_COLECTIVO",
-            "REVISAR",
-            "FIRMA",
-            "NOTIFICAR_ALEGANTES"
+            "ANALISIS",
+            "INFORME",
+            "REDACTAR",
+            "FIRMAR",
+            "NOTIFICAR"
           ]
         }
       ]
@@ -241,14 +272,14 @@
       "descripcion": "Gestión de AAU/AAUS/CA no integrada en tramitación sustantiva",
       "tramites": [
         {
-          "codigo": "ESPERA_INSTRUMENTO_AMBIENTAL",
+          "codigo": "ESPERA_RESOLUCION",
           "nombre": "Espera de Resolución Ambiental",
-          "descripcion": "Paralización hasta obtención de instrumento ambiental que le corresponda",
+          "descripcion": "Paralización hasta obtención de instrumento ambiental",
           "tareas": [
-            "REDACTAR_OFICIO_TITULAR",
-            "FIRMA",
-            "NOTIFICACION",
-            "ESPERAR_RESOLUCION_AMBIENTAL"
+            "REDACTAR",
+            "FIRMAR",
+            "NOTIFICAR",
+            "ESPERAR_PLAZO"
           ]
         }
       ]
@@ -259,20 +290,17 @@
       "descripcion": "Tramitación de AAU/AAUS integrada en el procedimiento sustantivo",
       "tramites": [
         {
-          "codigo": "REMISION_RESULTADO_IP_CONSULTAS",
+          "codigo": "REMISION_MEDIO_AMBIENTE",
           "nombre": "Remisión a Medio Ambiente",
           "descripcion": "Traslado a Medio Ambiente del resultado de IP y consultas para dictamen",
           "tareas": [
             "PREPARAR_DOCUMENTACION",
-            "REDACTAR_OFICIO",
-            "REVISAR",
-            "FIRMA",
-            "NOTIFICAR_MEDIO_AMBIENTE",
-            "REGISTRAR_PARALIZA_PLAZOS",
-            "ESPERAR_DICTAMEN",
-            "REGISTRAR_DICTAMEN",
-            "ESPERAR_INFORME",
-            "REGISTRAR_INFORME"
+            "REDACTAR",
+            "FIRMAR",
+            "NOTIFICAR",
+            "REGISTRAR_PARALIZA",
+            "ESPERAR_PLAZO",
+            "REGISTRAR"
           ]
         }
       ]
@@ -280,57 +308,78 @@
     {
       "codigo": "RESOLUCION",
       "nombre": "Resolución",
-      "descripcion": "Resolución finalizadora de la solicitud. Puede ser favorable, ",
+      "descripcion": "Resolución finalizadora de la solicitud (favorable, condicionada, denegatoria, etc.)",
       "tramites": [
         {
-          "codigo": "ELABORACION_RESOLUCION",
+          "codigo": "ELABORACION",
           "nombre": "Elaboración de Resolución",
-          "descripcion": "Redacción de la resolución con base en los informes y trámites previos",
+          "descripcion": "Redacción de la resolución con base en informes y trámites previos",
           "tareas": [
-            "ANALISIS_EXPEDIENTE",
-            "REDACTAR_RESOLUCION",
-            "FIRMA",
-            "REGISTRO_RESOLUCIÓN"
+            "ANALISIS",
+            "REDACTAR",
+            "FIRMAR",
+            "REGISTRAR"
           ]
         },
         {
-          "codigo": "NOTIFICACION_RESOLUCION",
+          "codigo": "NOTIFICACION",
           "nombre": "Notificación de Resolución",
           "descripcion": "Notificación a interesados de la resolución adoptada",
           "tareas": [
-            "PREPARAR_NOTIFICACIONES",
-            "NOTIFICAR_TITULAR",
-            "NOTIFICAR_INTERESADOS",
-            "REGISTRAR_NOTIFICACIONES"
+            "PREPARAR_DOCUMENTACION",
+            "NOTIFICAR",
+            "REGISTRAR"
           ]
         },
         {
-          "codigo": "PUBLICACION_RESOLUCION",
+          "codigo": "PUBLICACION",
           "nombre": "Publicación de Resolución",
           "descripcion": "Publicación en medios oficiales si procede",
           "tareas": [
-            "REDACTAR_OFICIOS",
-            "FIRMA",
-            "ENVIAR_PUBLICACION",
-            "ARCHIVAR_JUSTIFICANTE"
+            "REDACTAR",
+            "FIRMAR",
+            "NOTIFICAR",
+            "ARCHIVAR"
           ]
         }
       ]
     }
   ],
   "NOTAS_IMPLEMENTACION": {
+    "cambios_v2": [
+      "Separación de ANALISIS_SOLICITUD en ADMISIBILIDAD + ANALISIS_TECNICO",
+      "Creación de fase INADMISION independiente (finaliza solicitud)",
+      "Eliminación de sufijos redundantes en trámites/tareas",
+      "Unificación de comprobaciones documentales en un solo trámite reutilizable",
+      "Simplificación de nombres: COMPROBACION_SUBSANACION → fusionada en COMPROBACION_DOCUMENTAL"
+    ],
     "tareas_pendientes": [
-      "Desarrollar en detalle el proceso de CONSULTAS (separatas por organismo)",
-      "Atomizar las PUBLICACIONES_OFICIALES en trámites individuales (BOE, BOP, prensa, tablón, transparencia)",
+      "Atomizar PUBLICACIONES en trámites individuales si se detecta necesidad (BOE, BOP, prensa, tablón, transparencia)",
       "Definir tabla TIPOS_TAREAS cuando se implemente el sistema de tareas como entidades",
       "Crear las reglas de negocio que vinculen TIPO_EXPEDIENTE → FASES_OBLIGATORIAS",
-      "Crear las reglas de negocio que vinculen TIPO_FASE → TRAMITES_OBLIGATORIOS"
+      "Crear las reglas de negocio que vinculen TIPO_FASE → TRAMITES_OBLIGATORIOS",
+      "Definir reglas de paralelización: ANALISIS_TECNICO incompleto permite CONSULTAS pero bloquea INFORMACION_PUBLICA"
     ],
     "principios_mantenidos": [
       "Minimalismo estructural: la semántica vive en los TIPOS",
       "Las tareas son indicativas, no prescriptivas en esta fase",
       "Los trámites son específicos (no genéricos + actores) hasta detectar redundancia",
-      "El campo EXITO en FASES es booleano simple; el matiz está en trámites/tareas"
+      "Sufijos solo cuando aportan información no deducible del contexto",
+      "Separación clara entre fases con naturaleza jurídica diferente"
+    ],
+    "tipos_tareas_emergentes": [
+      "ANALISIS - Revisión técnica o jurídica",
+      "INFORME - Formalización de conclusiones",
+      "REDACTAR - Creación de documento administrativo",
+      "FIRMAR - Firma autorizada",
+      "NOTIFICAR - Comunicación a destinatario",
+      "ESPERAR_PLAZO - Suspensión temporal con fecha límite",
+      "REGISTRAR - Registro de entrada de documentación",
+      "PREPARAR_DOCUMENTACION - Recopilación y organización de documentos",
+      "ARCHIVAR - Archivo en expediente",
+      "GENERAR_SEPARATAS - Creación de documentos específicos por destinatario",
+      "ANALISIS_ORGANISMOS - Identificación de organismos afectados",
+      "CLASIFICAR - Clasificación de interesados/alegantes"
     ]
   }
 }
