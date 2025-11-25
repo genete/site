@@ -1,10 +1,204 @@
 {
   "metadata": {
-    "version": "2.0",
+    "version": "3.0",
     "descripcion": "Estructura jerárquica de fases, trámites y tareas para expedientes de AT",
     "principio": "Minimalismo estructural - la semántica vive en los TIPOS",
-    "nota": "Las tareas listadas son indicativas. La secuencia real se definirá en las reglas de negocio"
+    "fecha_actualizacion": "2025-11-23",
+    "cambios_v3": [
+      "Reducción a 8 tareas atómicas (eliminadas: PREPARAR_DOCUMENTACION, GENERAR_SEPARATAS, ANALISIS_ORGANISMOS, REGISTRAR_PARALIZA, CALCULAR, CLASIFICAR, ARCHIVAR)",
+      "Definición de 6 patrones básicos de flujo de datos",
+      "Campos de entrada/salida por tarea",
+      "Las tareas listadas son indicativas - la secuencia real se define en reglas de negocio"
+    ]
   },
+  "TAREAS_ATOMICAS": [
+    {
+      "codigo": "ANALISIS",
+      "nombre": "Análisis",
+      "descripcion": "Revisión técnica o jurídica de documentación",
+      "entrada": [
+        "ID_DOCUMENTOS[]",
+        "FASE_CONTEXTO"
+      ],
+      "salida": [
+        "CONCLUSIONES_TEXT",
+        "PROPUESTA_ACCION"
+      ],
+      "genera": "INFORME (opcional)"
+    },
+    {
+      "codigo": "INFORME",
+      "nombre": "Informe",
+      "descripcion": "Formalización de conclusiones del análisis",
+      "entrada": [
+        "ANALISIS_PREVIO",
+        "PLANTILLA_ID"
+      ],
+      "salida": [
+        "DOCUMENTO_ID"
+      ],
+      "genera": "REDACTAR o FIN"
+    },
+    {
+      "codigo": "REDACTAR",
+      "nombre": "Redactar",
+      "descripcion": "Creación de documento administrativo",
+      "entrada": [
+        "INFORME_PREVIO (opcional)",
+        "PLANTILLA_ID",
+        "TIPO_DOCUMENTO"
+      ],
+      "salida": [
+        "DOCUMENTO_BORRADOR_ID"
+      ],
+      "genera": "FIRMAR",
+      "nota": "Incluye implícitamente la preparación de documentación necesaria"
+    },
+    {
+      "codigo": "FIRMAR",
+      "nombre": "Firmar",
+      "descripcion": "Firma autorizada del documento",
+      "entrada": [
+        "DOCUMENTO_BORRADOR_ID",
+        "FIRMANTE_ID"
+      ],
+      "salida": [
+        "DOCUMENTO_FIRMADO_ID",
+        "FECHA_FIRMA"
+      ],
+      "genera": "NOTIFICAR o PUBLICAR"
+    },
+    {
+      "codigo": "NOTIFICAR",
+      "nombre": "Notificar",
+      "descripcion": "Comunicación a destinatario identificado",
+      "entrada": [
+        "DOCUMENTO_FIRMADO_ID",
+        "DESTINATARIO_ID[]",
+        "MEDIO_NOTIFICACION"
+      ],
+      "salida": [
+        "FECHA_NOTIFICACION",
+        "JUSTIFICANTE_ID"
+      ],
+      "genera": "ESPERAR_PLAZO (opcional) o FIN"
+    },
+    {
+      "codigo": "PUBLICAR",
+      "nombre": "Publicar",
+      "descripcion": "Publicación en medios oficiales (BOE, BOP, tablón, portal transparencia)",
+      "entrada": [
+        "DOCUMENTO_FIRMADO_ID",
+        "MEDIO_PUBLICACION"
+      ],
+      "salida": [
+        "FECHA_PUBLICACION",
+        "REFERENCIA_PUBLICACION"
+      ],
+      "genera": "ESPERAR_PLAZO (obligatorio)"
+    },
+    {
+      "codigo": "ESPERAR_PLAZO",
+      "nombre": "Esperar Plazo",
+      "descripcion": "Suspensión temporal con fecha límite (0 = indefinido para paralización sin plazo)",
+      "entrada": [
+        "FECHA_INICIO",
+        "PLAZO_DIAS",
+        "TIPO_DIAS (hábiles/naturales)"
+      ],
+      "salida": [
+        "FECHA_LIMITE",
+        "ESTADO_PLAZO (transcurrido/vigente)"
+      ],
+      "genera": "Alerta automática o REGISTRAR respuesta",
+      "nota": "PLAZO_DIAS=0 indica paralización indefinida (ej: espera resolución ambiental)"
+    },
+    {
+      "codigo": "REGISTRAR",
+      "nombre": "Registrar",
+      "descripcion": "Registro de entrada de documentación externa",
+      "entrada": [
+        "DOCUMENTO_EXTERNO",
+        "REMITENTE_ID",
+        "FECHA_ENTRADA"
+      ],
+      "salida": [
+        "REGISTRO_ENTRADA_NUM",
+        "DOCUMENTO_ID"
+      ],
+      "genera": "ANALISIS"
+    }
+  ],
+  "PATRONES_FLUJO": [
+    {
+      "codigo": "A",
+      "nombre": "Análisis Interno",
+      "secuencia": [
+        "ANALISIS",
+        "INFORME"
+      ],
+      "descripcion": "Análisis de documentación sin comunicación externa",
+      "destinatario": "Interno"
+    },
+    {
+      "codigo": "B",
+      "nombre": "Comunicación Simple",
+      "secuencia": [
+        "REDACTAR",
+        "FIRMAR",
+        "NOTIFICAR"
+      ],
+      "descripcion": "Comunicación sin espera de respuesta",
+      "destinatario": "Externo identificado"
+    },
+    {
+      "codigo": "C",
+      "nombre": "Comunicación con Espera",
+      "secuencia": [
+        "REDACTAR",
+        "FIRMAR",
+        "NOTIFICAR",
+        "ESPERAR_PLAZO"
+      ],
+      "descripcion": "Comunicación con espera de respuesta obligatoria",
+      "destinatario": "Externo identificado",
+      "retorno_esperado": "REGISTRAR"
+    },
+    {
+      "codigo": "D",
+      "nombre": "Publicación Oficial",
+      "secuencia": [
+        "REDACTAR",
+        "FIRMAR",
+        "PUBLICAR",
+        "ESPERAR_PLAZO"
+      ],
+      "descripcion": "Publicación en medios oficiales con plazo de alegaciones",
+      "destinatario": "Difusión pública",
+      "retorno_esperado": "Ninguno (plazo para alegaciones)"
+    },
+    {
+      "codigo": "E",
+      "nombre": "Recepción y Análisis",
+      "secuencia": [
+        "REGISTRAR",
+        "ANALISIS",
+        "INFORME"
+      ],
+      "descripcion": "Procesamiento de documentación recibida",
+      "destinatario": "Interno"
+    },
+    {
+      "codigo": "F",
+      "nombre": "Espera Pasiva",
+      "secuencia": [
+        "ESPERAR_PLAZO"
+      ],
+      "descripcion": "Suspensión con o sin plazo definido",
+      "destinatario": "Sistema",
+      "nota": "Único caso de tarea sin predecesoras"
+    }
+  ],
   "FASES": [
     {
       "codigo": "ADMISIBILIDAD",
@@ -15,65 +209,52 @@
           "codigo": "COMPROBACION_ADMISIBILIDAD",
           "nombre": "Comprobación de Admisibilidad",
           "descripcion": "Análisis de capacidad legal, técnica, económica y pago de tasas",
-          "tareas": [
+          "tareas_indicativas": [
             "ANALISIS",
             "INFORME"
-          ]
+          ],
+          "patron": "A"
         },
         {
           "codigo": "REQUERIMIENTO_SUBSANACION",
           "nombre": "Requerimiento de Subsanación",
           "descripcion": "Solicitud de subsanación de defectos formales subsanables",
-          "tareas": [
+          "tareas_indicativas": [
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR",
             "ESPERAR_PLAZO"
-          ]
-        }
-      ]
-    },
-    {
-      "codigo": "INADMISION",
-      "nombre": "Inadmisión",
-      "descripcion": "Inadmisión por defectos no subsanados o no subsanables. Finaliza la solicitud",
-      "tramites": [
-        {
-          "codigo": "RESOLUCION",
-          "nombre": "Resolución de Inadmisión",
-          "descripcion": "Resolución denegatoria por inadmisión",
-          "tareas": [
-            "REDACTAR",
-            "FIRMAR",
-            "NOTIFICAR"
-          ]
+          ],
+          "patron": "C"
         }
       ]
     },
     {
       "codigo": "ANALISIS_TECNICO",
       "nombre": "Análisis Técnico",
-      "descripcion": "Verificación de adecuación reglamentaria y completitud documental del proyecto y demás documentación técnica",
+      "descripcion": "Verificación de adecuación reglamentaria y completitud documental del proyecto",
       "tramites": [
         {
           "codigo": "COMPROBACION_DOCUMENTAL",
           "nombre": "Comprobación Documental",
           "descripcion": "Análisis de documentación técnica",
-          "tareas": [
+          "tareas_indicativas": [
             "ANALISIS",
             "INFORME"
-          ]
+          ],
+          "patron": "A"
         },
         {
           "codigo": "REQUERIMIENTO_MEJORA",
-          "nombre": "Requerimiento de Mejora/Complemento",
+          "nombre": "Requerimiento de Mejora/Complemento a la documentación presentada",
           "descripcion": "Solicitud de mejora o complemento de documentación técnica",
-          "tareas": [
+          "tareas_indicativas": [
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR",
             "ESPERAR_PLAZO"
-          ]
+          ],
+          "patron": "C"
         }
       ]
     },
@@ -86,23 +267,24 @@
           "codigo": "SOLICITUD_INFORME",
           "nombre": "Solicitud de Informe",
           "descripcion": "Remisión de documentación y solicitud de informe",
-          "tareas": [
+          "tareas_indicativas": [
             "REDACTAR",
-            "PREPARAR_DOCUMENTACION",
             "FIRMAR",
             "NOTIFICAR",
             "ESPERAR_PLAZO"
-          ]
+          ],
+          "patron": "C"
         },
         {
           "codigo": "RECEPCION_INFORME",
           "nombre": "Recepción de Informe",
           "descripcion": "Registro del informe recibido y análisis",
-          "tareas": [
+          "tareas_indicativas": [
             "REGISTRAR",
             "ANALISIS",
-            "ARCHIVAR"
-          ]
+            "INFORME"
+          ],
+          "patron": "E"
         }
       ]
     },
@@ -114,35 +296,37 @@
         {
           "codigo": "SOLICITUD_COMPATIBILIDAD",
           "nombre": "Solicitud de Compatibilidad",
-          "descripcion": "Remisión a Medio Ambiente para obtención de compatibilidad",
-          "tareas": [
+          "descripcion": "Remisión a Medio Ambiente para obtención de compatibilidad con la legislación medioambiental",
+          "tareas_indicativas": [
             "REDACTAR",
-            "PREPARAR_DOCUMENTACION",
             "FIRMAR",
             "NOTIFICAR",
             "ESPERAR_PLAZO"
-          ]
+          ],
+          "patron": "C"
         },
         {
           "codigo": "AUDIENCIA",
           "nombre": "Audiencia",
-          "descripcion": "Audiencia iniciada por Medio Ambiente en caso de incompatibilidad",
-          "tareas": [
+          "descripcion": "Audiencia iniciada por Medio Ambiente en caso de incompatibilidad. Se redactan alegaciones a la incompatibilidad",
+          "tareas_indicativas": [
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR",
             "ESPERAR_PLAZO"
-          ]
+          ],
+          "patron": "C"
         },
         {
           "codigo": "RECEPCION_INFORME",
           "nombre": "Recepción de Informe Vinculante",
           "descripcion": "Recepción de informe vinculante (compatible o incompatible)",
-          "tareas": [
+          "tareas_indicativas": [
             "REGISTRAR",
             "ANALISIS",
-            "ARCHIVAR"
-          ]
+            "INFORME"
+          ],
+          "patron": "E"
         }
       ]
     },
@@ -155,26 +339,29 @@
           "codigo": "ANALISIS_ADMISION",
           "nombre": "Análisis de Admisión",
           "descripcion": "Evaluación de requisitos para admisión a trámite",
-          "tareas": [
+          "tareas_indicativas": [
             "ANALISIS",
             "INFORME",
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR"
-          ]
+          ],
+          "patron": "A+B",
+          "nota": "Combina análisis interno con comunicación simple"
         },
         {
           "codigo": "ALEGACIONES",
-          "nombre": "Alegaciones",
+          "nombre": "Alegaciones a Admisión",
           "descripcion": "Presentación de alegaciones al informe de admisión",
-          "tareas": [
+          "tareas_indicativas": [
             "REGISTRAR",
             "ANALISIS",
             "INFORME",
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR"
-          ]
+          ],
+          "patron": "E+B"
         }
       ]
     },
@@ -186,40 +373,41 @@
         {
           "codigo": "SEPARATAS",
           "nombre": "Generación y Traslado de Separatas",
-          "descripcion": "Creación de separatas específicas por organismo afectado y su traslado",
-          "tareas": [
-            "ANALISIS_ORGANISMOS",
-            "GENERAR_SEPARATAS",
-            "FIRMAR",
-            "NOTIFICAR",
-            "ESPERAR_PLAZO"
-          ]
-        },
-        {
-          "codigo": "RECEPCION_INFORME",
-          "nombre": "Recepción de Informe",
-          "descripcion": "Registro de informe del organismo con condicionados o negativa",
-          "tareas": [
-            "REGISTRAR",
+          "descripcion": "Creación de separatas específicas por organismo afectado y su traslado (una por cada y de forma simultánea)",
+          "tareas_indicativas": [
             "ANALISIS",
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR",
             "ESPERAR_PLAZO"
-          ]
+          ],
+          "patron": "A+C",
+          "nota": "ANALISIS identifica organismos afectados, REDACTAR genera separatas con plantillas"
+        },
+        {
+          "codigo": "RECEPCION_INFORME",
+          "nombre": "Recepción de Informe de Organismo",
+          "descripcion": "Registro de informe del organismo con condicionados o negativa",
+          "tareas_indicativas": [
+            "REGISTRAR",
+            "ANALISIS",
+            "INFORME"
+          ],
+          "patron": "E"
         },
         {
           "codigo": "TRASLADO_REPAROS",
           "nombre": "Traslado de Reparos",
           "descripcion": "Traslado de reparos del titular al organismo correspondiente",
-          "tareas": [
+          "tareas_indicativas": [
             "REGISTRAR",
             "ANALISIS",
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR",
             "ESPERAR_PLAZO"
-          ]
+          ],
+          "patron": "E+C"
         }
       ]
     },
@@ -229,40 +417,93 @@
       "descripcion": "Exposición pública del proyecto para alegaciones",
       "tramites": [
         {
-          "codigo": "PUBLICACIONES",
-          "nombre": "Publicaciones Oficiales",
-          "descripcion": "Anuncios en boletines, tablones, prensa y portal de transparencia",
-          "tareas": [
+          "codigo": "ANUNCIO_BOE",
+          "nombre": "Anuncio en BOE",
+          "descripcion": "Publicación de anuncio en Boletín Oficial del Estado",
+          "tareas_indicativas": [
+            "REDACTAR",
+            "FIRMAR",
+            "PUBLICAR",
+            "ESPERAR_PLAZO"
+          ],
+          "patron": "D"
+        },
+        {
+          "codigo": "ANUNCIO_BOP",
+          "nombre": "Anuncio en BOP",
+          "descripcion": "Publicación de anuncio en Boletín Oficial Provincial",
+          "tareas_indicativas": [
+            "REDACTAR",
+            "FIRMAR",
+            "PUBLICAR",
+            "ESPERAR_PLAZO"
+          ],
+          "patron": "D"
+        },
+        {
+          "codigo": "ANUNCIO_PRENSA",
+          "nombre": "Anuncio en Prensa",
+          "descripcion": "Publicación de anuncio en diario de mayor difusión",
+          "tareas_indicativas": [
+            "REDACTAR",
+            "FIRMAR",
+            "PUBLICAR",
+            "ESPERAR_PLAZO"
+          ],
+          "patron": "D"
+        },
+        {
+          "codigo": "TABLON_AYUNTAMIENTOS",
+          "nombre": "Tablón de Ayuntamientos",
+          "descripcion": "Publicación en tablones de ayuntamientos afectados. Uno por ayuntamiento",
+          "tareas_indicativas": [
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR",
             "ESPERAR_PLAZO"
-          ]
+          ],
+          "patron": "C",
+          "nota": "Aunque es publicación, se trata como NOTIFICAR a ayuntamientos"
+        },
+        {
+          "codigo": "PORTAL_TRANSPARENCIA",
+          "nombre": "Portal de Transparencia",
+          "descripcion": "Publicación en portal web institucional. Los plazos los determinan los diarios.",
+          "tareas_indicativas": [
+            "REDACTAR",
+            "FIRMAR",
+            "PUBLICAR",
+            "ESPERAR_PLAZO"
+          ],
+          "patron": "D"
         },
         {
           "codigo": "RECEPCION_ALEGACION",
           "nombre": "Recepción de Alegación",
           "descripcion": "Registro de alegación individual y traslado a titular",
-          "tareas": [
+          "tareas_indicativas": [
             "REGISTRAR",
-            "CLASIFICAR",
+            "ANALISIS",
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR",
             "ESPERAR_PLAZO"
-          ]
+          ],
+          "patron": "E+C",
+          "nota": "ANALISIS clasifica alegante/interesado, traslada al titular para respuesta"
         },
         {
           "codigo": "ANALISIS_ALEGACIONES",
           "nombre": "Análisis de Alegaciones",
-          "descripcion": "Informe técnico-jurídico sobre alegaciones y propuesta de respuesta",
-          "tareas": [
+          "descripcion": "Informe técnico-jurídico sobre alegaciones y propuesta de respuesta para la resolución. Uno por alegación",
+          "tareas_indicativas": [
             "ANALISIS",
             "INFORME",
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR"
-          ]
+          ],
+          "patron": "A+B"
         }
       ]
     },
@@ -275,12 +516,14 @@
           "codigo": "ESPERA_RESOLUCION",
           "nombre": "Espera de Resolución Ambiental",
           "descripcion": "Paralización hasta obtención de instrumento ambiental",
-          "tareas": [
+          "tareas_indicativas": [
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR",
             "ESPERAR_PLAZO"
-          ]
+          ],
+          "patron": "C",
+          "nota": "ESPERAR_PLAZO con plazo=0 (indefinido) hasta recepción de resolución ambiental"
         }
       ]
     },
@@ -293,15 +536,15 @@
           "codigo": "REMISION_MEDIO_AMBIENTE",
           "nombre": "Remisión a Medio Ambiente",
           "descripcion": "Traslado a Medio Ambiente del resultado de IP y consultas para dictamen",
-          "tareas": [
-            "PREPARAR_DOCUMENTACION",
+          "tareas_indicativas": [
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR",
-            "REGISTRAR_PARALIZA",
             "ESPERAR_PLAZO",
             "REGISTRAR"
-          ]
+          ],
+          "patron": "C+E",
+          "nota": "Incluye paralización formal del expediente (ESPERAR_PLAZO con plazo=0) hasta recepción de dictamen"
         }
       ]
     },
@@ -314,72 +557,77 @@
           "codigo": "ELABORACION",
           "nombre": "Elaboración de Resolución",
           "descripcion": "Redacción de la resolución con base en informes y trámites previos",
-          "tareas": [
+          "tareas_indicativas": [
             "ANALISIS",
             "REDACTAR",
             "FIRMAR",
             "REGISTRAR"
-          ]
+          ],
+          "patron": "A+B (sin NOTIFICAR)",
+          "nota": "REGISTRAR es el registro interno de la resolución"
         },
         {
           "codigo": "NOTIFICACION",
           "nombre": "Notificación de Resolución",
-          "descripcion": "Notificación a interesados de la resolución adoptada",
-          "tareas": [
-            "PREPARAR_DOCUMENTACION",
-            "NOTIFICAR",
-            "REGISTRAR"
-          ]
+          "descripcion": "Notificación a interesados de la resolución adoptada. Uno por interesado o grupo de interesados.",
+          "tareas_indicativas": [
+            "REDACTAR",
+            "NOTIFICAR"
+          ],
+          "patron": "B (simplificado)"
         },
         {
           "codigo": "PUBLICACION",
           "nombre": "Publicación de Resolución",
-          "descripcion": "Publicación en medios oficiales si procede",
-          "tareas": [
+          "descripcion": "Publicación en medios oficiales si procede. Uno por diario.",
+          "tareas_indicativas": [
             "REDACTAR",
             "FIRMAR",
-            "NOTIFICAR",
-            "ARCHIVAR"
-          ]
+            "PUBLICAR"
+          ],
+          "patron": "D (sin ESPERAR_PLAZO)",
+          "nota": "Preparación de documentación incluye recopilación de expediente completo"
         }
       ]
     }
   ],
   "NOTAS_IMPLEMENTACION": {
-    "cambios_v2": [
-      "Separación de ANALISIS_SOLICITUD en ADMISIBILIDAD + ANALISIS_TECNICO",
-      "Creación de fase INADMISION independiente (finaliza solicitud)",
-      "Eliminación de sufijos redundantes en trámites/tareas",
-      "Unificación de comprobaciones documentales en un solo trámite reutilizable",
-      "Simplificación de nombres: COMPROBACION_SUBSANACION → fusionada en COMPROBACION_DOCUMENTAL"
+    "cambios_v3": [
+      "Reducción de 12 a 8 tareas atómicas",
+      "Eliminación de PREPARAR_DOCUMENTACION como tarea registrable (es funcionalidad de interfaz en REDACTAR)",
+      "GENERAR_SEPARATAS absorbido en REDACTAR con plantillas",
+      "ANALISIS_ORGANISMOS absorbido en ANALISIS (organismos definidos en proyecto)",
+      "REGISTRAR_PARALIZA absorbido en ESPERAR_PLAZO (plazo=0 para indefinido)",
+      "CALCULAR es botón/macro, no tarea registrable",
+      "CLASIFICAR absorbido en ANALISIS",
+      "ARCHIVAR es fase RESOLUCION de archivo, no tarea",
+      "Definición de 6 patrones básicos de flujo (A-F)",
+      "Campos de entrada/salida por tarea",
+      "Los trámites ahora indican patrón aplicable"
     ],
     "tareas_pendientes": [
-      "Atomizar PUBLICACIONES en trámites individuales si se detecta necesidad (BOE, BOP, prensa, tablón, transparencia)",
-      "Definir tabla TIPOS_TAREAS cuando se implemente el sistema de tareas como entidades",
-      "Crear las reglas de negocio que vinculen TIPO_EXPEDIENTE → FASES_OBLIGATORIAS",
-      "Crear las reglas de negocio que vinculen TIPO_FASE → TRAMITES_OBLIGATORIOS",
-      "Definir reglas de paralelización: ANALISIS_TECNICO incompleto permite CONSULTAS pero bloquea INFORMACION_PUBLICA"
+      "Crear tabla TIPOS_TAREAS con las 8 tareas atómicas",
+      "Definir tabla REGLAS_SECUENCIA_TAREAS que vincule TIPO_TRAMITE → SECUENCIA_OBLIGATORIA",
+      "Crear reglas que vinculen TIPO_EXPEDIENTE → FASES_OBLIGATORIAS",
+      "Crear reglas que vinculen TIPO_FASE → TRAMITES_OBLIGATORIOS",
+      "Implementar validación no intrusiva en interfaz (asterisco rojo + texto explicativo)",
+      "Implementar botones de cálculo de fechas/plazos (no como tareas)",
+      "Implementar asistente de preparación documental en formulario REDACTAR"
     ],
     "principios_mantenidos": [
       "Minimalismo estructural: la semántica vive en los TIPOS",
       "Las tareas son indicativas, no prescriptivas en esta fase",
       "Los trámites son específicos (no genéricos + actores) hasta detectar redundancia",
       "Sufijos solo cuando aportan información no deducible del contexto",
-      "Separación clara entre fases con naturaleza jurídica diferente"
+      "Separación clara entre fases con naturaleza jurídica diferente",
+      "Las reglas de negocio determinan secuencias válidas, no el código"
     ],
-    "tipos_tareas_emergentes": [
-      "ANALISIS - Revisión técnica o jurídica",
-      "INFORME - Formalización de conclusiones",
-      "REDACTAR - Creación de documento administrativo",
-      "FIRMAR - Firma autorizada",
-      "NOTIFICAR - Comunicación a destinatario",
-      "ESPERAR_PLAZO - Suspensión temporal con fecha límite",
-      "REGISTRAR - Registro de entrada de documentación",
-      "PREPARAR_DOCUMENTACION - Recopilación y organización de documentos",
-      "ARCHIVAR - Archivo en expediente",
-      "GENERAR_SEPARATAS - Creación de documentos específicos por destinatario",
-      "ANALISIS_ORGANISMOS - Identificación de organismos afectados",
-      "CLASIFICAR - Clasificación de interesados/alegantes"
+    "filosofia_tareas": [
+      "Una tarea es una unidad de trabajo registrable con fecha inicio/fin",
+      "Si una actividad nunca se registra como pendiente, no es una tarea",
+      "Las funcionalidades de interfaz (preparar docs, calcular fechas) NO son tareas",
+      "Los patrones son combinaciones de tareas según reglas de negocio",
+      "La experiencia real de tramitación guía el diseño, no la teoría"
     ]
   }
 }
