@@ -1,50 +1,42 @@
 {
   "metadata": {
-    "version": "3.0",
+    "version": "4.0",
     "descripcion": "Estructura jerárquica de fases, trámites y tareas para expedientes de AT",
     "principio": "Minimalismo estructural - la semántica vive en los TIPOS",
-    "fecha_actualizacion": "2025-11-23",
-    "cambios_v3": [
-      "Reducción a 8 tareas atómicas (eliminadas: PREPARAR_DOCUMENTACION, GENERAR_SEPARATAS, ANALISIS_ORGANISMOS, REGISTRAR_PARALIZA, CALCULAR, CLASIFICAR, ARCHIVAR)",
-      "Definición de 6 patrones básicos de flujo de datos",
-      "Campos de entrada/salida por tarea",
-      "Las tareas listadas son indicativas - la secuencia real se define en reglas de negocio"
+    "fecha_actualizacion": "2025-12-14",
+    "cambios_v4": [
+      "Fusión de ANALISIS + INFORME en una sola tarea atómica ANALISIS",
+      "Reducción a 7 tareas atómicas (eliminado INFORME como tarea independiente)",
+      "Nueva fase REGISTRO_SOLICITUD como punto de entrada al sistema",
+      "Nuevo patrón G: Registro Inicial (solo REGISTRAR)",
+      "Actualización de patrones A y E para reflejar la fusión ANALISIS+INFORME",
+      "Documentación de responsabilidad del usuario en corrección de datos durante tareas",
+      "Nota sobre inmutabilidad de datos críticos tras inicio de tramitación"
     ]
   },
   "TAREAS_ATOMICAS": [
     {
       "codigo": "ANALISIS",
       "nombre": "Análisis",
-      "descripcion": "Revisión técnica o jurídica de documentación",
+      "descripcion": "Revisión técnica o jurídica de documentación con generación de informe formal cuando proceda",
       "entrada": [
         "ID_DOCUMENTOS[]",
         "FASE_CONTEXTO"
       ],
       "salida": [
         "CONCLUSIONES_TEXT",
-        "PROPUESTA_ACCION"
+        "PROPUESTA_ACCION",
+        "DOCUMENTO_INFORME_ID (opcional)"
       ],
-      "genera": "INFORME (opcional)"
-    },
-    {
-      "codigo": "INFORME",
-      "nombre": "Informe",
-      "descripcion": "Formalización de conclusiones del análisis",
-      "entrada": [
-        "ANALISIS_PREVIO",
-        "PLANTILLA_ID"
-      ],
-      "salida": [
-        "DOCUMENTO_ID"
-      ],
-      "genera": "REDACTAR o FIN"
+      "genera": "REDACTAR o FIN",
+      "nota": "Fusiona el análisis intelectual con la formalización documental. La salida puede ser solo datos (conclusiones) o un documento PDF formal según el contexto del trámite. Durante la ejecución, el usuario puede corregir datos erróneos en PROYECTOS o clasificación documental, salvo que las reglas de negocio lo impidan."
     },
     {
       "codigo": "REDACTAR",
       "nombre": "Redactar",
       "descripcion": "Creación de documento administrativo",
       "entrada": [
-        "INFORME_PREVIO (opcional)",
+        "ANALISIS_PREVIO (opcional)",
         "PLANTILLA_ID",
         "TIPO_DOCUMENTO"
       ],
@@ -52,7 +44,7 @@
         "DOCUMENTO_BORRADOR_ID"
       ],
       "genera": "FIRMAR",
-      "nota": "Incluye implícitamente la preparación de documentación necesaria"
+      "nota": "Incluye implícitamente la preparación de documentación necesaria. El borrador generado carece de fecha administrativa y no tiene validez jurídica hasta la firma."
     },
     {
       "codigo": "FIRMAR",
@@ -66,7 +58,8 @@
         "DOCUMENTO_FIRMADO_ID",
         "FECHA_FIRMA"
       ],
-      "genera": "NOTIFICAR o PUBLICAR"
+      "genera": "NOTIFICAR o PUBLICAR",
+      "nota": "Transforma el borrador en documento administrativo válido inyectando la fecha del acto jurídico. Responsabilidad de usuario con autoridad distinta al redactor."
     },
     {
       "codigo": "NOTIFICAR",
@@ -116,7 +109,7 @@
     {
       "codigo": "REGISTRAR",
       "nombre": "Registrar",
-      "descripcion": "Registro de entrada de documentación externa",
+      "descripcion": "Registro de entrada de documentación externa o interna",
       "entrada": [
         "DOCUMENTO_EXTERNO",
         "REMITENTE_ID",
@@ -126,7 +119,8 @@
         "REGISTRO_ENTRADA_NUM",
         "DOCUMENTO_ID"
       ],
-      "genera": "ANALISIS"
+      "genera": "ANALISIS",
+      "nota": "Crea el vínculo entre el archivo físico y el sistema de tramitación. Asigna TAREA_ORIGEN_ID al documento. Es el punto de entrada de información al expediente."
     }
   ],
   "PATRONES_FLUJO": [
@@ -134,11 +128,11 @@
       "codigo": "A",
       "nombre": "Análisis Interno",
       "secuencia": [
-        "ANALISIS",
-        "INFORME"
+        "ANALISIS"
       ],
-      "descripcion": "Análisis de documentación sin comunicación externa",
-      "destinatario": "Interno"
+      "descripcion": "Análisis de documentación con o sin generación de informe formal según contexto",
+      "destinatario": "Interno",
+      "nota": "Versión v4: ANALISIS ahora fusiona el análisis intelectual con la generación de informe cuando sea necesario"
     },
     {
       "codigo": "B",
@@ -182,11 +176,11 @@
       "nombre": "Recepción y Análisis",
       "secuencia": [
         "REGISTRAR",
-        "ANALISIS",
-        "INFORME"
+        "ANALISIS"
       ],
-      "descripcion": "Procesamiento de documentación recibida",
-      "destinatario": "Interno"
+      "descripcion": "Procesamiento de documentación recibida con análisis",
+      "destinatario": "Interno",
+      "nota": "Versión v4: Simplificado tras fusión ANALISIS+INFORME"
     },
     {
       "codigo": "F",
@@ -197,9 +191,48 @@
       "descripcion": "Suspensión con o sin plazo definido",
       "destinatario": "Sistema",
       "nota": "Único caso de tarea sin predecesoras"
+    },
+    {
+      "codigo": "G",
+      "nombre": "Registro Inicial",
+      "secuencia": [
+        "REGISTRAR"
+      ],
+      "descripcion": "Entrada formal de solicitud al sistema sin análisis inmediato",
+      "destinatario": "Sistema",
+      "nota": "Nuevo en v4. Punto de entrada al sistema. Genera expediente si procede y vincula documentación física al contexto administrativo."
     }
   ],
   "FASES": [
+    {
+      "codigo": "REGISTRO_SOLICITUD",
+      "nombre": "Registro de Solicitud",
+      "descripcion": "Recepción y registro formal de la solicitud. Punto de entrada al sistema. Pre-clasificación realizada por administrativo antes de asignación a técnico.",
+      "tramites": [
+        {
+          "codigo": "RECEPCION_SOLICITUD",
+          "nombre": "Recepción de Solicitud",
+          "descripcion": "Registro de entrada de la solicitud y documentación técnica aportada. Asignación de número de expediente si es solicitud inicial. Vinculación de documentación física (ZIP/carpeta) al expediente.",
+          "tareas_indicativas": [
+            "REGISTRAR"
+          ],
+          "patron": "G",
+          "nota": "Ejecutado por técnico tras asignación. Formaliza el registro pre-realizado por administrativo. Actualiza T.DOCUMENTOS con TAREA_ORIGEN_ID. La clasificación inicial (tipo solicitud, proyecto básico) ya está hecha en T.EXPEDIENTES y T.PROYECTOS por el flujo colaborativo previo."
+        },
+        {
+          "codigo": "COMUNICACION_INICIO",
+          "nombre": "Comunicación de Inicio",
+          "descripcion": "Acuse de recibo formal al solicitante con número de expediente asignado",
+          "tareas_indicativas": [
+            "REDACTAR",
+            "FIRMAR",
+            "NOTIFICAR"
+          ],
+          "patron": "B",
+          "nota": "Opcional según política organizativa. Algunas administraciones solo comunican tras verificar admisibilidad."
+        }
+      ]
+    },
     {
       "codigo": "ADMISIBILIDAD",
       "nombre": "Admisibilidad de la Solicitud",
@@ -210,10 +243,10 @@
           "nombre": "Comprobación de Admisibilidad",
           "descripcion": "Análisis de capacidad legal, técnica, económica y pago de tasas",
           "tareas_indicativas": [
-            "ANALISIS",
-            "INFORME"
+            "ANALISIS"
           ],
-          "patron": "A"
+          "patron": "A",
+          "nota": "ANALISIS genera informe de admisibilidad documentando conclusiones"
         },
         {
           "codigo": "REQUERIMIENTO_SUBSANACION",
@@ -239,14 +272,13 @@
           "nombre": "Comprobación Documental",
           "descripcion": "Análisis de documentación técnica",
           "tareas_indicativas": [
-            "ANALISIS",
-            "INFORME"
+            "ANALISIS"
           ],
           "patron": "A"
         },
         {
           "codigo": "REQUERIMIENTO_MEJORA",
-          "nombre": "Requerimiento de Mejora/Complemento a la documentación presentada",
+          "nombre": "Requerimiento de Mejora/Complemento",
           "descripcion": "Solicitud de mejora o complemento de documentación técnica",
           "tareas_indicativas": [
             "REDACTAR",
@@ -281,8 +313,7 @@
           "descripcion": "Registro del informe recibido y análisis",
           "tareas_indicativas": [
             "REGISTRAR",
-            "ANALISIS",
-            "INFORME"
+            "ANALISIS"
           ],
           "patron": "E"
         }
@@ -308,7 +339,7 @@
         {
           "codigo": "AUDIENCIA",
           "nombre": "Audiencia",
-          "descripcion": "Audiencia iniciada por Medio Ambiente en caso de incompatibilidad. Se redactan alegaciones a la incompatibilidad",
+          "descripcion": "Audiencia iniciada por Medio Ambiente en caso de incompatibilidad. Se redactan alegaciones",
           "tareas_indicativas": [
             "REDACTAR",
             "FIRMAR",
@@ -323,8 +354,7 @@
           "descripcion": "Recepción de informe vinculante (compatible o incompatible)",
           "tareas_indicativas": [
             "REGISTRAR",
-            "ANALISIS",
-            "INFORME"
+            "ANALISIS"
           ],
           "patron": "E"
         }
@@ -341,7 +371,6 @@
           "descripcion": "Evaluación de requisitos para admisión a trámite",
           "tareas_indicativas": [
             "ANALISIS",
-            "INFORME",
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR"
@@ -356,7 +385,6 @@
           "tareas_indicativas": [
             "REGISTRAR",
             "ANALISIS",
-            "INFORME",
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR"
@@ -373,7 +401,7 @@
         {
           "codigo": "SEPARATAS",
           "nombre": "Generación y Traslado de Separatas",
-          "descripcion": "Creación de separatas específicas por organismo afectado y su traslado (una por cada y de forma simultánea)",
+          "descripcion": "Creación de separatas específicas por organismo afectado y su traslado (una por cada)",
           "tareas_indicativas": [
             "ANALISIS",
             "REDACTAR",
@@ -390,8 +418,7 @@
           "descripcion": "Registro de informe del organismo con condicionados o negativa",
           "tareas_indicativas": [
             "REGISTRAR",
-            "ANALISIS",
-            "INFORME"
+            "ANALISIS"
           ],
           "patron": "E"
         },
@@ -468,7 +495,7 @@
         {
           "codigo": "PORTAL_TRANSPARENCIA",
           "nombre": "Portal de Transparencia",
-          "descripcion": "Publicación en portal web institucional. Los plazos los determinan los diarios.",
+          "descripcion": "Publicación en portal web institucional",
           "tareas_indicativas": [
             "REDACTAR",
             "FIRMAR",
@@ -495,10 +522,9 @@
         {
           "codigo": "ANALISIS_ALEGACIONES",
           "nombre": "Análisis de Alegaciones",
-          "descripcion": "Informe técnico-jurídico sobre alegaciones y propuesta de respuesta para la resolución. Uno por alegación",
+          "descripcion": "Informe técnico-jurídico sobre alegaciones y propuesta de respuesta",
           "tareas_indicativas": [
             "ANALISIS",
-            "INFORME",
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR"
@@ -569,50 +595,48 @@
         {
           "codigo": "NOTIFICACION",
           "nombre": "Notificación de Resolución",
-          "descripcion": "Notificación a interesados de la resolución adoptada. Uno por interesado o grupo de interesados.",
+          "descripcion": "Notificación a interesados de la resolución adoptada",
           "tareas_indicativas": [
             "REDACTAR",
             "NOTIFICAR"
           ],
-          "patron": "B (simplificado)"
+          "patron": "B (simplificado)",
+          "nota": "Puede omitir FIRMAR si se reutiliza el documento ya firmado en ELABORACION"
         },
         {
           "codigo": "PUBLICACION",
           "nombre": "Publicación de Resolución",
-          "descripcion": "Publicación en medios oficiales si procede. Uno por diario.",
+          "descripcion": "Publicación en medios oficiales si procede",
           "tareas_indicativas": [
             "REDACTAR",
             "FIRMAR",
             "PUBLICAR"
           ],
-          "patron": "D (sin ESPERAR_PLAZO)",
-          "nota": "Preparación de documentación incluye recopilación de expediente completo"
+          "patron": "D (sin ESPERAR_PLAZO)"
         }
       ]
     }
   ],
   "NOTAS_IMPLEMENTACION": {
-    "cambios_v3": [
-      "Reducción de 12 a 8 tareas atómicas",
-      "Eliminación de PREPARAR_DOCUMENTACION como tarea registrable (es funcionalidad de interfaz en REDACTAR)",
-      "GENERAR_SEPARATAS absorbido en REDACTAR con plantillas",
-      "ANALISIS_ORGANISMOS absorbido en ANALISIS (organismos definidos en proyecto)",
-      "REGISTRAR_PARALIZA absorbido en ESPERAR_PLAZO (plazo=0 para indefinido)",
-      "CALCULAR es botón/macro, no tarea registrable",
-      "CLASIFICAR absorbido en ANALISIS",
-      "ARCHIVAR es fase RESOLUCION de archivo, no tarea",
-      "Definición de 6 patrones básicos de flujo (A-F)",
-      "Campos de entrada/salida por tarea",
-      "Los trámites ahora indican patrón aplicable"
+    "cambios_v4": [
+      "Reducción de 8 a 7 tareas atómicas (fusión ANALISIS+INFORME)",
+      "Nueva fase REGISTRO_SOLICITUD como entrada al sistema",
+      "Nuevo patrón G: Registro Inicial",
+      "Actualización de patrones A y E tras fusión",
+      "Documentación de responsabilidad del usuario en corrección de datos",
+      "Nota sobre inmutabilidad de datos críticos (pendiente de desarrollo en otro hilo)"
     ],
     "tareas_pendientes": [
-      "Crear tabla TIPOS_TAREAS con las 8 tareas atómicas",
+      "Crear tabla TIPOS_TAREAS con las 7 tareas atómicas",
+      "Crear tabla T.DOCUMENTOS con campos: ID, URL, EXPEDIENTE_ID, TAREA_ORIGEN_ID, TIPO_CONTENIDO (PRINCIPAL/BORRADOR/AUXILIAR/EVIDENCIA)",
+      "Crear tabla T.TAREA_ENTRADAS (relación M:N entre Tareas y Documentos de entrada)",
       "Definir tabla REGLAS_SECUENCIA_TAREAS que vincule TIPO_TRAMITE → SECUENCIA_OBLIGATORIA",
       "Crear reglas que vinculen TIPO_EXPEDIENTE → FASES_OBLIGATORIAS",
       "Crear reglas que vinculen TIPO_FASE → TRAMITES_OBLIGATORIOS",
       "Implementar validación no intrusiva en interfaz (asterisco rojo + texto explicativo)",
       "Implementar botones de cálculo de fechas/plazos (no como tareas)",
-      "Implementar asistente de preparación documental en formulario REDACTAR"
+      "Implementar asistente de preparación documental en formulario REDACTAR",
+      "Definir reglas de inmutabilidad para campos críticos (TIPO_EXPEDIENTE_ID, NUMERO_AT, etc.) tras creación de primera SOLICITUD"
     ],
     "principios_mantenidos": [
       "Minimalismo estructural: la semántica vive en los TIPOS",
@@ -627,7 +651,14 @@
       "Si una actividad nunca se registra como pendiente, no es una tarea",
       "Las funcionalidades de interfaz (preparar docs, calcular fechas) NO son tareas",
       "Los patrones son combinaciones de tareas según reglas de negocio",
-      "La experiencia real de tramitación guía el diseño, no la teoría"
+      "La experiencia real de tramitación guía el diseño, no la teoría",
+      "El estado del expediente es deducible de las tareas incompletas (filosofía del 'mise en place')"
+    ],
+    "gestion_datos": [
+      "Durante la ejecución de tareas, el usuario puede corregir datos erróneos en PROYECTOS o clasificaciones documentales",
+      "Las correcciones están limitadas por validaciones de reglas de negocio (advertencias/bloqueos)",
+      "Datos críticos como TIPO_EXPEDIENTE_ID, NUMERO_AT son inmutables tras inicio formal de tramitación (creación de primera SOLICITUD)",
+      "La modificación de datos estructurales tras tramitación iniciada requiere procedimientos específicos de corrección (rectificación de errores) que se desarrollarán en fase posterior del diseño"
     ]
   }
 }
