@@ -1,126 +1,110 @@
 {
   "metadata": {
-    "version": "4.0",
+    "version": "5.0",
     "descripcion": "Estructura jerárquica de fases, trámites y tareas para expedientes de AT",
     "principio": "Minimalismo estructural - la semántica vive en los TIPOS",
-    "fecha_actualizacion": "2025-12-14",
-    "cambios_v4": [
-      "Fusión de ANALISIS + INFORME en una sola tarea atómica ANALISIS",
-      "Reducción a 7 tareas atómicas (eliminado INFORME como tarea independiente)",
-      "Nueva fase REGISTRO_SOLICITUD como punto de entrada al sistema",
-      "Nuevo patrón G: Registro Inicial (solo REGISTRAR)",
-      "Actualización de patrones A y E para reflejar la fusión ANALISIS+INFORME",
-      "Documentación de responsabilidad del usuario en corrección de datos durante tareas",
-      "Nota sobre inmutabilidad de datos críticos tras inicio de tramitación"
+    "fecha_actualizacion": "2025-12-16",
+    "cambios_v5": [
+      "Revisión completa de TAREAS_ATOMICAS: relación con T.TAREAS (6 campos) y T.DOCUMENTOS",
+      "ANALISIS: documento de salida ahora obligatorio (no opcional) para validación estructurada",
+      "Todas las tareas confirmadas como compatibles con estructura minimalista de 6 campos",
+      "Actualización de campos 'entrada' y 'salida' para reflejar solo documentos (no datos auxiliares)",
+      "Cambio de campo 'genera' a 'habilita_tareas' para mayor claridad semántica",
+      "Eliminación de referencias a datos no documentales en entrada/salida (PLANTILLA_ID, FIRMANTE_ID, etc.)",
+      "Validación uniforme: COUNT(TAREA_ORIGEN_ID) > 0 para tareas con salida obligatoria"
     ]
   },
   "TAREAS_ATOMICAS": [
     {
       "codigo": "ANALISIS",
       "nombre": "Análisis",
-      "descripcion": "Revisión técnica o jurídica de documentación con generación de informe formal cuando proceda",
+      "descripcion": "Revisión técnica o jurídica de documentación con generación obligatoria de documento formal (informe técnico-jurídico o nota interna)",
       "entrada": [
-        "ID_DOCUMENTOS[]",
-        "FASE_CONTEXTO"
+        "ID_DOCUMENTO (obligatorio)"
       ],
       "salida": [
-        "CONCLUSIONES_TEXT",
-        "PROPUESTA_ACCION",
-        "DOCUMENTO_INFORME_ID (opcional)"
+        "DOCUMENTO_ID (obligatorio)"
       ],
-      "genera": "REDACTAR o FIN",
-      "nota": "Fusiona el análisis intelectual con la formalización documental. La salida puede ser solo datos (conclusiones) o un documento PDF formal según el contexto del trámite. Durante la ejecución, el usuario puede corregir datos erróneos en PROYECTOS o clasificación documental, salvo que las reglas de negocio lo impidan."
+      "habilita_tareas": "REDACTAR",
+      "nota": "Documento de entrada se implementa mediante T.DOCUMENTOS.TAREA_DESTINO_ID apuntando a esta tarea. Documento de salida (obligatorio - cambio v5) se implementa mediante T.DOCUMENTOS.TAREA_ORIGEN_ID. El motor de reglas valida que COUNT(TAREA_ORIGEN_ID) > 0 antes de permitir FECHA_FIN. El documento puede ser informe formal o nota técnica informal según contexto del trámite. Durante la ejecución, el usuario puede corregir datos erróneos en PROYECTOS o clasificación documental, salvo que las reglas de negocio lo impidan. Los 6 campos genéricos de T.TAREAS son suficientes para ANALISIS."
     },
     {
       "codigo": "REDACTAR",
       "nombre": "Redactar",
-      "descripcion": "Creación de documento administrativo",
+      "descripcion": "Creación de documento administrativo borrador",
       "entrada": [
-        "ANALISIS_PREVIO (opcional)",
-        "PLANTILLA_ID",
-        "TIPO_DOCUMENTO"
+        "ID_DOCUMENTO (opcional - documento de ANALISIS previo si existe)"
       ],
       "salida": [
-        "DOCUMENTO_BORRADOR_ID"
+        "DOCUMENTO_BORRADOR_ID (obligatorio)"
       ],
-      "genera": "FIRMAR",
-      "nota": "Incluye implícitamente la preparación de documentación necesaria. El borrador generado carece de fecha administrativa y no tiene validez jurídica hasta la firma."
+      "habilita_tareas": "FIRMAR",
+      "nota": "Documento de entrada opcional: si existe ANALISIS previo, T.DOCUMENTOS.TAREA_DESTINO_ID apunta a esta tarea REDACTAR. Documento de salida obligatorio mediante T.DOCUMENTOS.TAREA_ORIGEN_ID. El técnico consulta libremente todo el pool documental del expediente para redactar, pero solo el documento de ANALISIS (si existe) tiene relación administrativa formal. El borrador carece de fecha administrativa y validez jurídica hasta FIRMAR. Incluye implícitamente la preparación de documentación necesaria. Los 6 campos genéricos de T.TAREAS son suficientes para REDACTAR."
     },
     {
       "codigo": "FIRMAR",
       "nombre": "Firmar",
-      "descripcion": "Firma autorizada del documento",
+      "descripcion": "Firma autorizada del documento borrador",
       "entrada": [
-        "DOCUMENTO_BORRADOR_ID",
-        "FIRMANTE_ID"
+        "DOCUMENTO_BORRADOR_ID (obligatorio)"
       ],
       "salida": [
-        "DOCUMENTO_FIRMADO_ID",
-        "FECHA_FIRMA"
+        "DOCUMENTO_FIRMADO_ID (obligatorio)"
       ],
-      "genera": "NOTIFICAR o PUBLICAR",
-      "nota": "Transforma el borrador en documento administrativo válido inyectando la fecha del acto jurídico. Responsabilidad de usuario con autoridad distinta al redactor."
+      "habilita_tareas": "NOTIFICAR, PUBLICAR",
+      "nota": "Documento de entrada obligatorio: T.DOCUMENTOS.TAREA_DESTINO_ID apunta a esta tarea FIRMAR (borrador de REDACTAR). Documento de salida obligatorio mediante T.DOCUMENTOS.TAREA_ORIGEN_ID (documento firmado con validez jurídica). FECHA_FIN de la tarea es la fecha administrativa del acto de firma. Transforma el borrador en documento administrativo válido. Responsabilidad de usuario con autoridad distinta al redactor. Los 6 campos genéricos de T.TAREAS son suficientes para FIRMAR."
     },
     {
       "codigo": "NOTIFICAR",
       "nombre": "Notificar",
       "descripcion": "Comunicación a destinatario identificado",
       "entrada": [
-        "DOCUMENTO_FIRMADO_ID",
-        "DESTINATARIO_ID[]",
-        "MEDIO_NOTIFICACION"
+        "DOCUMENTO_FIRMADO_ID (obligatorio)"
       ],
       "salida": [
-        "FECHA_NOTIFICACION",
-        "JUSTIFICANTE_ID"
+        "JUSTIFICANTE_ID (obligatorio)"
       ],
-      "genera": "ESPERAR_PLAZO (opcional) o FIN"
+      "habilita_tareas": "ESPERAR_PLAZO, REGISTRAR",
+      "nota": "Documento de entrada obligatorio: T.DOCUMENTOS.TAREA_DESTINO_ID apunta a esta tarea NOTIFICAR (documento firmado de FIRMAR). Documento de salida obligatorio mediante T.DOCUMENTOS.TAREA_ORIGEN_ID (justificante de notificación: acuse, certificado postal, etc.). FECHA_FIN de la tarea es la fecha administrativa de la notificación. El justificante es documento terminal que no alimenta otras tareas. Destinatario y medio de notificación se gestionan fuera de la estructura de tarea. Los 6 campos genéricos de T.TAREAS son suficientes para NOTIFICAR."
     },
     {
       "codigo": "PUBLICAR",
       "nombre": "Publicar",
       "descripcion": "Publicación en medios oficiales (BOE, BOP, tablón, portal transparencia)",
       "entrada": [
-        "DOCUMENTO_FIRMADO_ID",
-        "MEDIO_PUBLICACION"
+        "DOCUMENTO_FIRMADO_ID (obligatorio)"
       ],
       "salida": [
-        "FECHA_PUBLICACION",
-        "REFERENCIA_PUBLICACION"
+        "JUSTIFICANTE_PUBLICACION_ID (obligatorio)"
       ],
-      "genera": "ESPERAR_PLAZO (obligatorio)"
+      "habilita_tareas": "ESPERAR_PLAZO",
+      "nota": "Documento de entrada obligatorio: T.DOCUMENTOS.TAREA_DESTINO_ID apunta a esta tarea PUBLICAR (documento firmado de FIRMAR). Documento de salida obligatorio mediante T.DOCUMENTOS.TAREA_ORIGEN_ID (justificante de publicación: PDF del BOE/BOP, captura portal, etc.). FECHA_FIN de la tarea es la fecha administrativa de publicación. Campo NOTAS almacena referencia de publicación (ej: BOE-A-2025-1234). Siempre habilita ESPERAR_PLAZO para plazo de alegaciones. Los 6 campos genéricos de T.TAREAS son suficientes para PUBLICAR."
     },
     {
       "codigo": "ESPERAR_PLAZO",
       "nombre": "Esperar Plazo",
       "descripcion": "Suspensión temporal con fecha límite (0 = indefinido para paralización sin plazo)",
       "entrada": [
-        "FECHA_INICIO",
-        "PLAZO_DIAS",
-        "TIPO_DIAS (hábiles/naturales)"
+        "Ninguno"
       ],
       "salida": [
-        "FECHA_LIMITE",
-        "ESTADO_PLAZO (transcurrido/vigente)"
+        "Ninguno"
       ],
-      "genera": "Alerta automática o REGISTRAR respuesta",
-      "nota": "PLAZO_DIAS=0 indica paralización indefinida (ej: espera resolución ambiental)"
+      "habilita_tareas": "REGISTRAR, (otras según contexto)",
+      "nota": "Única tarea que no maneja documentos. FECHA_INICIO de la tarea marca inicio del plazo. Campo NOTAS almacena PLAZO_DIAS y TIPO_DIAS (ej: '30 días hábiles' o '0 días (indefinido)'). FECHA_FIN marca el cierre administrativo del plazo (puede ser automático al transcurrir o manual al recibir respuesta). PLAZO_DIAS=0 indica paralización indefinida hasta evento externo (ej: resolución ambiental). Los 6 campos genéricos de T.TAREAS son suficientes para ESPERAR_PLAZO."
     },
     {
       "codigo": "REGISTRAR",
       "nombre": "Registrar",
       "descripcion": "Registro de entrada de documentación externa o interna",
       "entrada": [
-        "DOCUMENTO_EXTERNO",
-        "REMITENTE_ID",
-        "FECHA_ENTRADA"
+        "Ninguno (documento externo en 'hall' aún no vinculado al sistema)"
       ],
       "salida": [
-        "REGISTRO_ENTRADA_NUM",
-        "DOCUMENTO_ID"
+        "DOCUMENTO_ID (obligatorio)"
       ],
-      "genera": "ANALISIS",
-      "nota": "Crea el vínculo entre el archivo físico y el sistema de tramitación. Asigna TAREA_ORIGEN_ID al documento. Es el punto de entrada de información al expediente."
+      "habilita_tareas": "ANALISIS",
+      "nota": "Única tarea que produce documento sin consumir. Incorpora documentos externos al sistema transformándolos de estado 'huérfano' (NULL, NULL) a 'generado' (ID_REGISTRAR, NULL) mediante T.DOCUMENTOS.TAREA_ORIGEN_ID. Es el punto de entrada de información al expediente. Campo NOTAS puede almacenar número de registro de entrada y remitente. Los 6 campos genéricos de T.TAREAS son suficientes para REGISTRAR."
     }
   ],
   "PATRONES_FLUJO": [
@@ -618,33 +602,34 @@
     }
   ],
   "NOTAS_IMPLEMENTACION": {
-    "cambios_v4": [
-      "Reducción de 8 a 7 tareas atómicas (fusión ANALISIS+INFORME)",
-      "Nueva fase REGISTRO_SOLICITUD como entrada al sistema",
-      "Nuevo patrón G: Registro Inicial",
-      "Actualización de patrones A y E tras fusión",
-      "Documentación de responsabilidad del usuario en corrección de datos",
-      "Nota sobre inmutabilidad de datos críticos (pendiente de desarrollo en otro hilo)"
+    "cambios_v5": [
+      "Revisión completa de relación TAREAS_ATOMICAS con estructura minimalista de T.TAREAS (6 campos)",
+      "Confirmación: los 6 campos genéricos son suficientes para todas las tareas atómicas",
+      "ANALISIS: documento de salida cambiado de opcional a obligatorio",
+      "Cambio de nomenclatura: 'genera' → 'habilita_tareas'",
+      "Simplificación campos entrada/salida: solo documentos (no datos auxiliares)",
+      "Validación uniforme mediante T.DOCUMENTOS.TAREA_ORIGEN_ID para tareas con salida obligatoria",
+      "6 de 7 tareas manejan documentos; solo ESPERAR_PLAZO no usa documentos",
+      "REGISTRAR es la única tarea que produce sin consumir (punto de entrada)"
     ],
     "tareas_pendientes": [
-      "Crear tabla TIPOS_TAREAS con las 7 tareas atómicas",
-      "Crear tabla T.DOCUMENTOS con campos: ID, URL, EXPEDIENTE_ID, TAREA_ORIGEN_ID, TIPO_CONTENIDO (PRINCIPAL/BORRADOR/AUXILIAR/EVIDENCIA)",
-      "Crear tabla T.TAREA_ENTRADAS (relación M:N entre Tareas y Documentos de entrada)",
+      "Crear tabla TIPOS_TAREAS con las 7 tareas atómicas y sus reglas de entrada/salida",
+      "Actualizar tabla T.DOCUMENTOS confirmando campos: ID, URL, EXPEDIENTE_ID, TAREA_ORIGEN_ID, TAREA_DESTINO_ID",
+      "Implementar validaciones en motor de reglas para documentos obligatorios",
       "Definir tabla REGLAS_SECUENCIA_TAREAS que vincule TIPO_TRAMITE → SECUENCIA_OBLIGATORIA",
       "Crear reglas que vinculen TIPO_EXPEDIENTE → FASES_OBLIGATORIAS",
       "Crear reglas que vinculen TIPO_FASE → TRAMITES_OBLIGATORIOS",
       "Implementar validación no intrusiva en interfaz (asterisco rojo + texto explicativo)",
       "Implementar botones de cálculo de fechas/plazos (no como tareas)",
-      "Implementar asistente de preparación documental en formulario REDACTAR",
-      "Definir reglas de inmutabilidad para campos críticos (TIPO_EXPEDIENTE_ID, NUMERO_AT, etc.) tras creación de primera SOLICITUD"
+      "Implementar asistente de preparación documental en formulario REDACTAR"
     ],
     "principios_mantenidos": [
       "Minimalismo estructural: la semántica vive en los TIPOS",
-      "Las tareas son indicativas, no prescriptivas en esta fase",
-      "Los trámites son específicos (no genéricos + actores) hasta detectar redundancia",
-      "Sufijos solo cuando aportan información no deducible del contexto",
-      "Separación clara entre fases con naturaleza jurídica diferente",
-      "Las reglas de negocio determinan secuencias válidas, no el código"
+      "Los 6 campos de T.TAREAS son suficientes para todas las tareas atómicas",
+      "La relación tarea↔documento se almacena UNA SOLA VEZ en T.DOCUMENTOS",
+      "Estados deducibles NO se almacenan (PENDIENTE/EN_CURSO/COMPLETADA)",
+      "Las reglas de negocio determinan secuencias válidas, no el código",
+      "El núcleo es documental: documentos, fechas, plazos y destinatarios"
     ],
     "filosofia_tareas": [
       "Una tarea es una unidad de trabajo registrable con fecha inicio/fin",
@@ -654,11 +639,14 @@
       "La experiencia real de tramitación guía el diseño, no la teoría",
       "El estado del expediente es deducible de las tareas incompletas (filosofía del 'mise en place')"
     ],
-    "gestion_datos": [
-      "Durante la ejecución de tareas, el usuario puede corregir datos erróneos en PROYECTOS o clasificaciones documentales",
-      "Las correcciones están limitadas por validaciones de reglas de negocio (advertencias/bloqueos)",
-      "Datos críticos como TIPO_EXPEDIENTE_ID, NUMERO_AT son inmutables tras inicio formal de tramitación (creación de primera SOLICITUD)",
-      "La modificación de datos estructurales tras tramitación iniciada requiere procedimientos específicos de corrección (rectificación de errores) que se desarrollarán en fase posterior del diseño"
+    "validaciones_documentales": [
+      "ANALISIS: SELECT COUNT(*) FROM T.DOCUMENTOS WHERE TAREA_ORIGEN_ID = ? (debe ser > 0)",
+      "REDACTAR: SELECT COUNT(*) FROM T.DOCUMENTOS WHERE TAREA_ORIGEN_ID = ? (debe ser > 0)",
+      "FIRMAR: SELECT COUNT(*) FROM T.DOCUMENTOS WHERE TAREA_ORIGEN_ID = ? (debe ser > 0)",
+      "NOTIFICAR: SELECT COUNT(*) FROM T.DOCUMENTOS WHERE TAREA_ORIGEN_ID = ? (debe ser > 0)",
+      "PUBLICAR: SELECT COUNT(*) FROM T.DOCUMENTOS WHERE TAREA_ORIGEN_ID = ? (debe ser > 0)",
+      "REGISTRAR: SELECT COUNT(*) FROM T.DOCUMENTOS WHERE TAREA_ORIGEN_ID = ? (debe ser > 0)",
+      "ESPERAR_PLAZO: No requiere validación documental"
     ]
   }
 }
