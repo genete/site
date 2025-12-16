@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "version": "5.1",
+    "version": "5.2",
     "descripcion": "Estructura jerárquica de fases, trámites y tareas para expedientes de AT",
     "principio": "Minimalismo estructural - la semántica vive en los TIPOS",
     "fecha_actualizacion": "2025-12-16",
@@ -21,6 +21,15 @@
       "Actualizado patrón C: ESPERAR_PLAZO habilita INCORPORAR (opcional, si llega respuesta)",
       "Añadidas notas en trámites con ESPERAR_PLAZO sobre creación opcional de INCORPORAR si llega respuesta",
       "Documentos generados internamente (borrador, firmado, informe) se vinculan al completar la tarea que los genera"
+    ],
+    "cambios_v52": [
+      "Corregida descripción REGISTRO_SOLICITUD/RECEPCION_SOLICITUD: el expediente ya existe al entrar en una fase",
+      "Añadido INCORPORAR+ANALISIS inicial en COMPATIBILIDAD_AMBIENTAL/AUDIENCIA (patrón E+C)",
+      "Corregido flujo INFORMACION_PUBLICA para anuncios BOE/BOP/PRENSA: doble ESPERAR_PLAZO con INCORPORAR intermedio",
+      "Añadido trámite RECEPCION_FIGURA en FIGURA_AMBIENTAL_EXTERNA (patrón E)",
+      "Desdoblado AAU_AAUS_INTEGRADA: REMISION_MEDIO_AMBIENTE + nuevo trámite RECEPCION_DICTAMEN (patrón E)",
+      "Aclarado que patrones son orientativos y combinables según reglas de negocio",
+      "Total de trámites: 28 → 31 (añadidos 3 trámites de recepción de documentos externos críticos)"
     ]
   },
   "TAREAS_ATOMICAS": [
@@ -125,7 +134,7 @@
       ],
       "descripcion": "Análisis de documentación con generación obligatoria de informe formal o nota técnica",
       "destinatario": "Interno",
-      "nota": "Versión v5: ANALISIS siempre genera documento (obligatorio) para permitir validación estructurada"
+      "nota": "Versión v5: ANALISIS siempre genera documento (obligatorio) para permitir validación estructurada. Los patrones son orientativos y combinables según reglas de negocio."
     },
     {
       "codigo": "B",
@@ -150,7 +159,7 @@
       "descripcion": "Comunicación con espera de respuesta obligatoria. Si llega respuesta externa, el técnico debe crear una tarea INCORPORAR (y normalmente un ANALISIS posterior).",
       "destinatario": "Externo identificado",
       "retorno_esperado": "INCORPORAR (si llega documento)",
-      "nota": "Versión v5.1: ESPERAR_PLAZO habilita INCORPORAR opcionalmente. El usuario decide si crea INCORPORAR según llegue o no respuesta externa"
+      "nota": "Versión v5.1: ESPERAR_PLAZO habilita INCORPORAR opcionalmente. El usuario decide si crea INCORPORAR según llegue o no respuesta externa. Los patrones son orientativos y combinables."
     },
     {
       "codigo": "D",
@@ -206,12 +215,12 @@
         {
           "codigo": "RECEPCION_SOLICITUD",
           "nombre": "Recepción de Solicitud",
-          "descripcion": "Incorporación de la solicitud y documentación técnica aportada. Asignación de número de expediente si es solicitud inicial. Vinculación de documentación física (ZIP/carpeta) al expediente.",
+          "descripcion": "Incorporación de la solicitud y documentación técnica aportada al expediente ya existente. Vinculación de documentación física (ZIP/carpeta) al expediente.",
           "tareas_indicativas": [
             "INCORPORAR"
           ],
           "patron": "G",
-          "nota": "Ejecutado por técnico tras asignación. Formaliza el registro pre-realizado por administrativo. Actualiza T.DOCUMENTOS con TAREA_ORIGEN_ID. La clasificación inicial (tipo solicitud, proyecto básico) ya está hecha en T.EXPEDIENTES y T.PROYECTOS por el flujo colaborativo previo."
+          "nota": "Ejecutado por técnico tras asignación. El expediente ya ha sido creado previamente por el flujo colaborativo administrativo. Formaliza la incorporación de documentación. Actualiza T.DOCUMENTOS con TAREA_ORIGEN_ID. La clasificación inicial (tipo solicitud, proyecto básico) ya está hecha en T.EXPEDIENTES y T.PROYECTOS."
         },
         {
           "codigo": "COMUNICACION_INICIO",
@@ -336,14 +345,17 @@
         {
           "codigo": "AUDIENCIA",
           "nombre": "Audiencia",
-          "descripcion": "Audiencia iniciada por Medio Ambiente en caso de incompatibilidad. Se redactan alegaciones",
+          "descripcion": "Audiencia iniciada por Medio Ambiente en caso de incompatibilidad. Se incorpora propuesta de declaración de incompatibilidad, se analiza y se redactan alegaciones",
           "tareas_indicativas": [
+            "INCORPORAR",
+            "ANALISIS",
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR",
             "ESPERAR_PLAZO"
           ],
-          "patron": "C"
+          "patron": "E+C",
+          "nota": "Medio Ambiente notifica propuesta de incompatibilidad que debe ser incorporada y analizada antes de redactar alegaciones."
         },
         {
           "codigo": "RECEPCION_INFORME",
@@ -446,38 +458,47 @@
         {
           "codigo": "ANUNCIO_BOE",
           "nombre": "Anuncio en BOE",
-          "descripcion": "Publicación de anuncio en Boletín Oficial del Estado",
+          "descripcion": "Publicación de anuncio en Boletín Oficial del Estado. Incluye dos esperas: hasta publicación efectiva y plazo de alegaciones",
           "tareas_indicativas": [
             "REDACTAR",
             "FIRMAR",
-            "PUBLICAR",
+            "NOTIFICAR",
+            "ESPERAR_PLAZO",
+            "INCORPORAR",
             "ESPERAR_PLAZO"
           ],
-          "patron": "D"
+          "patron": "C+E(parcial)+F",
+          "nota": "Proceso real: 1) Enviar anuncio al Boletín Oficial del Estado (NOTIFICAR), 2) Esperar hasta publicación efectiva (ESPERAR_PLAZO), 3) Incorporar justificante con fecha real de publicación (INCORPORAR), 4) Plazo de alegaciones desde fecha real (ESPERAR_PLAZO). No controlamos la fecha exacta de publicación."
         },
         {
           "codigo": "ANUNCIO_BOP",
           "nombre": "Anuncio en BOP",
-          "descripcion": "Publicación de anuncio en Boletín Oficial Provincial",
+          "descripcion": "Publicación de anuncio en Boletín Oficial Provincial. Incluye dos esperas: hasta publicación efectiva y plazo de alegaciones",
           "tareas_indicativas": [
             "REDACTAR",
             "FIRMAR",
-            "PUBLICAR",
+            "NOTIFICAR",
+            "ESPERAR_PLAZO",
+            "INCORPORAR",
             "ESPERAR_PLAZO"
           ],
-          "patron": "D"
+          "patron": "C+E(parcial)+F",
+          "nota": "Proceso real: 1) Enviar anuncio al Boletín Oficial Provincial (NOTIFICAR), 2) Esperar hasta publicación efectiva (ESPERAR_PLAZO), 3) Incorporar justificante con fecha real de publicación (INCORPORAR), 4) Plazo de alegaciones desde fecha real (ESPERAR_PLAZO). No controlamos la fecha exacta de publicación."
         },
         {
           "codigo": "ANUNCIO_PRENSA",
           "nombre": "Anuncio en Prensa",
-          "descripcion": "Publicación de anuncio en diario de mayor difusión",
+          "descripcion": "Publicación de anuncio en diario de mayor difusión. Incluye dos esperas: hasta publicación efectiva y plazo de alegaciones",
           "tareas_indicativas": [
             "REDACTAR",
             "FIRMAR",
-            "PUBLICAR",
+            "NOTIFICAR",
+            "ESPERAR_PLAZO",
+            "INCORPORAR",
             "ESPERAR_PLAZO"
           ],
-          "patron": "D"
+          "patron": "C+E(parcial)+F",
+          "nota": "Proceso real: 1) Enviar anuncio al diario de mayor difusión (NOTIFICAR), 2) Esperar hasta publicación efectiva (ESPERAR_PLAZO), 3) Incorporar justificante con fecha real de publicación (INCORPORAR), 4) Plazo de alegaciones desde fecha real (ESPERAR_PLAZO). No controlamos la fecha exacta de publicación."
         },
         {
           "codigo": "TABLON_AYUNTAMIENTOS",
@@ -487,10 +508,11 @@
             "REDACTAR",
             "FIRMAR",
             "NOTIFICAR",
-            "ESPERAR_PLAZO"
+            "ESPERAR_PLAZO",
+            "INCORPORAR"
           ],
-          "patron": "C",
-          "nota": "Aunque es publicación, se trata como NOTIFICAR a ayuntamientos"
+          "patron": "C+E(parcial)",
+          "nota": "Aunque es publicación, se trata como NOTIFICAR a ayuntamientos. El certificado de exposición llega al finalizar el plazo (no controlamos fecha exacta de inicio). Típicamente genera quebraderos de cabeza administrativos."
         },
         {
           "codigo": "PORTAL_TRANSPARENCIA",
@@ -502,7 +524,8 @@
             "PUBLICAR",
             "ESPERAR_PLAZO"
           ],
-          "patron": "D"
+          "patron": "D",
+          "nota": "Controlamos nosotros la fecha de publicación y el plazo, no requiere doble espera como BOE/BOP/PRENSA."
         },
         {
           "codigo": "RECEPCION_ALEGACION",
@@ -539,9 +562,9 @@
       "descripcion": "Gestión de AAU/AAUS/CA no integrada en tramitación sustantiva",
       "tramites": [
         {
-          "codigo": "ESPERA_RESOLUCION",
-          "nombre": "Espera de Resolución Ambiental",
-          "descripcion": "Paralización hasta obtención de instrumento ambiental",
+          "codigo": "SOLICITUD_FIGURA",
+          "nombre": "Solicitud de Instrumento Ambiental",
+          "descripcion": "Solicitud de AAU/AAUS/CA al órgano ambiental competente y espera de resolución",
           "tareas_indicativas": [
             "REDACTAR",
             "FIRMAR",
@@ -549,7 +572,18 @@
             "ESPERAR_PLAZO"
           ],
           "patron": "C",
-          "nota": "ESPERAR_PLAZO con plazo=0 (indefinido) hasta recepción de resolución ambiental. Cuando llegue la resolución ambiental externa, el técnico debe crear una tarea INCORPORAR para incorporarla al expediente antes de analizarla."
+          "nota": "ESPERAR_PLAZO con plazo=0 (indefinido) hasta recepción de resolución ambiental."
+        },
+        {
+          "codigo": "RECEPCION_FIGURA",
+          "nombre": "Recepción de Instrumento Ambiental",
+          "descripcion": "Incorporación de resolución ambiental (AAU/AAUS/CA) y análisis. Puede ser favorable o negativa.",
+          "tareas_indicativas": [
+            "INCORPORAR",
+            "ANALISIS"
+          ],
+          "patron": "E",
+          "nota": "El documento ambiental recibido (AAU, AAUS o CA) se incorpora mediante INCORPORAR y se analiza con ANALISIS. Si es negativa puede paralizar el expediente."
         }
       ]
     },
@@ -561,7 +595,7 @@
         {
           "codigo": "REMISION_MEDIO_AMBIENTE",
           "nombre": "Remisión a Medio Ambiente",
-          "descripcion": "Traslado a Medio Ambiente del resultado de IP y consultas para dictamen",
+          "descripcion": "Traslado a Medio Ambiente del resultado de IP y consultas para dictamen, y espera de respuesta",
           "tareas_indicativas": [
             "REDACTAR",
             "FIRMAR",
@@ -569,7 +603,18 @@
             "ESPERAR_PLAZO"
           ],
           "patron": "C",
-          "nota": "Incluye paralización formal del expediente (ESPERAR_PLAZO con plazo=0) hasta recepción de dictamen. Cuando llegue el dictamen, el técnico debe crear una tarea INCORPORAR para incorporarlo al expediente."
+          "nota": "Incluye paralización formal del expediente (ESPERAR_PLAZO con plazo=0) hasta recepción de dictamen."
+        },
+        {
+          "codigo": "RECEPCION_DICTAMEN",
+          "nombre": "Recepción de Dictamen Ambiental",
+          "descripcion": "Incorporación del dictamen de Medio Ambiente y análisis. El dictamen puede ser favorable, desfavorable o condicionado.",
+          "tareas_indicativas": [
+            "INCORPORAR",
+            "ANALISIS"
+          ],
+          "patron": "E",
+          "nota": "El dictamen ambiental integrado se incorpora mediante INCORPORAR y se analiza con ANALISIS. Si es desfavorable, puede condicionar o paralizar la autorización sustantiva."
         }
       ]
     },
@@ -636,6 +681,16 @@
       "Eliminado REGISTRAR de AAU_AAUS_INTEGRADA/REMISION_MEDIO_AMBIENTE y ajustado patrón de C+E a C.",
       "INCORPORAR es la única tarea que produce documento sin consumir (punto de entrada de documentación externa)."
     ],
+    "cambios_v5_2": [
+      "Corregida descripción REGISTRO_SOLICITUD/RECEPCION_SOLICITUD: el expediente ya existe al entrar en una fase (creado por flujo colaborativo administrativo).",
+      "Añadido INCORPORAR+ANALISIS inicial en COMPATIBILIDAD_AMBIENTAL/AUDIENCIA: la propuesta de incompatibilidad es documento externo crítico.",
+      "Corregido flujo INFORMACION_PUBLICA para anuncios BOE/BOP/PRENSA: doble ESPERAR_PLAZO con INCORPORAR intermedio (espera hasta publicación + plazo alegaciones).",
+      "TABLON_AYUNTAMIENTOS mantiene flujo simplificado: certificado llega al final del plazo completo (problemática administrativa real).",
+      "Añadido trámite RECEPCION_FIGURA en FIGURA_AMBIENTAL_EXTERNA para incorporar y analizar resolución ambiental (puede ser negativa).",
+      "Añadido trámite RECEPCION_DICTAMEN en AAU_AAUS_INTEGRADA para incorporar y analizar dictamen de Medio Ambiente.",
+      "Aclarado que patrones son orientativos y combinables: el usuario puede usar patrones múltiples veces o combinar según reglas de negocio.",
+      "Total de trámites: 28 → 31 (añadidos 3 trámites de recepción de documentos externos críticos)."
+    ],
     "tareas_pendientes": [
       "Crear tabla TIPOS_TAREAS con las 7 tareas atómicas y sus reglas de entrada/salida",
       "Actualizar tabla T.DOCUMENTOS confirmando campos: ID, URL, EXPEDIENTE_ID, TAREA_ORIGEN_ID, TAREA_DESTINO_ID",
@@ -654,7 +709,8 @@
       "La relación tarea↔documento se almacena UNA SOLA VEZ en T.DOCUMENTOS",
       "Estados deducibles NO se almacenan (PENDIENTE/EN_CURSO/COMPLETADA)",
       "Las reglas de negocio determinan secuencias válidas, no el código",
-      "El núcleo es documental: documentos, fechas, plazos y destinatarios"
+      "El núcleo es documental: documentos, fechas, plazos y destinatarios",
+      "Los patrones son orientativos y combinables, no prescriptivos"
     ],
     "filosofia_tareas": [
       "Una tarea es una unidad de trabajo registrable con fecha inicio/fin",
@@ -670,6 +726,13 @@
       "Upload integrado: al poner FECHA_FIN en tarea con salida obligatoria, debe haber documento vinculado",
       "El registro de salida administrativo (LPA 39/2015) es externo al tramitador, lo gestiona NOTIFICAR",
       "No confundir INCORPORAR (interno del tramitador) con registro de entrada/salida (externo, administrativos)"
+    ],
+    "realidad_administrativa_v5_2": [
+      "BOE/BOP/PRENSA: No controlamos fecha exacta de publicación → doble ESPERAR_PLAZO necesario",
+      "TABLON_AYUNTAMIENTOS: Certificado llega al final, no al inicio → quebradero de cabeza real",
+      "PORTAL_TRANSPARENCIA: Control total de fechas → flujo simplificado",
+      "Resoluciones ambientales: Pueden ser negativas → requieren trámite de recepción explícito",
+      "Propuesta de incompatibilidad ambiental: Documento externo crítico → requiere INCORPORAR+ANALISIS antes de alegar"
     ],
     "validaciones_documentales": [
       "ANALISIS: SELECT COUNT(*) FROM T.DOCUMENTOS WHERE TAREA_ORIGEN_ID = ? (debe ser > 0)",
